@@ -1,22 +1,17 @@
-<div class="min-h-screen flex">
-    <!-- Left side - Login Form -->
-    <div class="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-        <div class="mx-auto w-full max-w-sm lg:w-96">
-            <div>
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-3">
-                        <h1 class="text-2xl font-bold text-gray-900">Welcome back</h1>
-                        <p class="text-sm text-gray-500">Sign in to your account</p>
-                    </div>
-                </div>
+<div>
+    <div class="flex items-center">
+        <div class="flex-shrink-0">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
             </div>
+        </div>
+        <div class="ml-3">
+            <h1 class="text-2xl font-bold text-gray-900">Welcome back</h1>
+            <p class="text-sm text-gray-500">Sign in to your account</p>
+        </div>
+    </div>
 
             <div class="mt-8">
                 <form wire:submit.prevent="login" class="space-y-6">
@@ -77,7 +72,7 @@
                         </div>
 
                         <div class="text-sm">
-                            <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+                            <a href="{{ route('password.request') }}" class="font-medium text-blue-600 hover:text-blue-500">
                                 Forgot your password?
                             </a>
                         </div>
@@ -117,62 +112,6 @@
                         <a href="#" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                             Create an account
                         </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right side - Visual/Image -->
-    <div class="hidden lg:flex lg:flex-1 lg:relative">
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800"></div>
-        <div class="relative flex flex-col justify-center items-center text-white p-12">
-            <!-- Animated background elements -->
-            <div class="absolute inset-0 overflow-hidden">
-                <div class="absolute -top-40 -right-40 w-80 h-80 bg-white bg-opacity-10 rounded-full blur-3xl animate-pulse"></div>
-                <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-white bg-opacity-10 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-white bg-opacity-5 rounded-full blur-2xl animate-pulse" style="animation-delay: 2s;"></div>
-            </div>
-            
-            <!-- Content -->
-            <div class="relative z-10 text-center">
-                <div class="mb-8">
-                    <div class="w-24 h-24 mx-auto mb-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-4xl font-bold mb-4">Welcome to Ovon</h2>
-                    <p class="text-xl text-blue-100 mb-8 max-w-md">
-                        Secure, scalable, and beautiful authentication system built with Laravel and Livewire.
-                    </p>
-                </div>
-                
-                <!-- Feature highlights -->
-                <div class="space-y-4 text-left max-w-sm">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <span class="text-blue-100">Enterprise-grade security</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <span class="text-blue-100">Real-time authentication</span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                        </div>
-                        <span class="text-blue-100">Modern user interface</span>
                     </div>
                 </div>
             </div>
