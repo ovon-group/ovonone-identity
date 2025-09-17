@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Login;
 use App\Livewire\ForgotPassword;
 use App\Livewire\ResetPassword;
-use App\Livewire\Profile;
 
 Route::get('/login', Login::class)->name('login')->middleware('guest');
 Route::get('/forgot-password', ForgotPassword::class)->name('password.request')->middleware('guest');
