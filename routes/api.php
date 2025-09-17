@@ -25,23 +25,52 @@ Route::middleware('auth:api')->group(function () {
 
 Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
     Route::post('accounts', function (Request $request) {
-        foreach ($request->accounts as $account) {
-            Account::updateOrCreate(['uuid' => $account['uuid']], $account);
-        }
+        $mappedAccounts = collect($request->accounts)
+            ->map(function ($accountData) {
+                $account = Account::updateOrCreate(
+                    ['name' => $accountData['name']],
+                    [
+                        'short_name' => $accountData['short_name'] ?? \Illuminate\Support\Str::shortName($accountData['name']),
+                    ],
+                );
+                return $account->only(['uuid', 'name']);
+            });
 
         return [
-            'success' => true,
+            'accounts' => $mappedAccounts,
+        ];
+    });
+
+    Route::post('users', function (Request $request) {
+        $users = collect($request->users)->map(function ($userData) {
+            $user = User::query()
+                        ->withTrashed()
+                        ->updateOrCreate(['email' => $userData['email']], Arr::only($userData, [
+                            'name',
+                            'email',
+                            'mobile',
+                            'is_internal',
+                            'email_verified_at',
+                            'password',
+                            'deleted_at',
+                        ]));
+            $user->syncRoles($userData['roles'] ?? []);
+            $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
+
+            return $user->only(['uuid', 'email', 'mobile', 'name']);
+        });
+
+        return [
+            'users' => $users,
         ];
     });
 
     Route::post('{appName}/roles', function (Request $request, string $appName) {
         $allPermissions = collect($request->roles)
             ->pluck('permissions')
-
             ->flatten(1)
             ->unique()
-            ->values()
-        ;
+            ->values();
 
         // Create permissions that don't exist
         Permission::upsert(
@@ -49,20 +78,20 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                 'app' => $appName,
                 'name' => $item['name'],
                 'guard_name' => $item['guard_name'],
-                ])
-                ->toArray(),
-            ['app', 'name', 'guard_name']
+            ])
+                           ->toArray(),
+            ['app', 'name', 'guard_name'],
         );
 
         // Delete removed permissions
 
         $allPermissions->keyBy('guard_name')
-            ->each(function ($group, $guardName) use($appName) {
-                Permission::where('app', $appName)
-                    ->where('guard_name', $guardName)
-                    ->whereNotIn('name', collect($group)->pluck('name'))
-                    ->delete();
-            });
+                       ->each(function ($group, $guardName) use ($appName) {
+                           Permission::where('app', $appName)
+                                     ->where('guard_name', $guardName)
+                                     ->whereNotIn('name', collect($group)->pluck('name'))
+                                     ->delete();
+                       });
 
         foreach ($request->roles as $roleData) {
             $role = \Spatie\Permission\Models\Role::updateOrCreate([
@@ -82,26 +111,5 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         ];
     });
 
-    Route::post('users', function (Request $request) {
-        foreach ($request->users as $userData) {
-            $user = User::query()
-                        ->withTrashed()
-                        ->updateOrCreate(['uuid' => $userData['uuid']], Arr::only($userData, [
-                            'name',
-                            'name',
-                            'name',
-                            'email',
-                            'is_internal',
-                            'email_verified_at',
-                            'password',
-                            'deleted_at',
-                        ]));
-            $user->syncRoles($userData['roles']);
-            $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'])->pluck('id'));
-        }
 
-        return [
-            'success' => true,
-        ];
-    });
 });
