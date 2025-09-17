@@ -45,15 +45,22 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         $users = collect($request->users)->map(function ($userData) {
             $user = User::query()
                         ->withTrashed()
-                        ->updateOrCreate(['email' => $userData['email']], Arr::only($userData, [
-                            'name',
-                            'email',
-                            'mobile',
-                            'is_internal',
-                            'email_verified_at',
-                            'password',
-                            'deleted_at',
-                        ]));
+                        ->updateOrCreate(
+                            $userData['email']
+                                ? ['email' => $userData['email']]
+                                : array_filter(Arr::only($userData, [
+                                    'name',
+                                    'mobile',
+                                ])),
+                            Arr::only($userData, [
+                                'name',
+                                'email',
+                                'mobile',
+                                'is_internal',
+                                'email_verified_at',
+                                'password',
+                                'deleted_at',
+                            ]));
             $user->syncRoles($userData['roles'] ?? []);
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
 
