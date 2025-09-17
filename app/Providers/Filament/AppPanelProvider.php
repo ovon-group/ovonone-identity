@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Livewire\Profile;
+use Filament\Auth\Pages\EditProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -9,7 +11,9 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentAsset;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -27,6 +31,8 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             // ->login()
+            ->profile(EditProfile::class, false)
+            ->viteTheme('resources/css/filament/app/theme.css')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -54,5 +60,15 @@ class AppPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    public function boot()
+    {
+        $file = glob(public_path('build/assets/app-*.js'))[0] ?? null;
+        if ($file) {
+            FilamentAsset::register([
+                Js::make('app', $file),
+            ]);
+        }
     }
 }

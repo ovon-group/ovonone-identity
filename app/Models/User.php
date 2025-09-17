@@ -15,11 +15,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
+use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
 
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable implements FilamentUser, HasPasskeys
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes, HasUuids;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes, HasUuids, InteractsWithPasskeys;
 
 //    /**
 //     * The attributes that are mass assignable.
@@ -67,7 +69,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->is_internal;
     }
 
-    public function getFilamentName(): string
+    public function getNameAttribute():string
     {
         return $this->first_name . ' ' . $this->last_name;
     }
