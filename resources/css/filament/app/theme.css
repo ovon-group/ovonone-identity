@@ -3,4 +3,4 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../resources/views/vendor/filament-panels/**/*';
-@source '../../../../resources/views/vendor/passkeys/**/*';
+@source '../../../../vendor/spatie/laravel-passkeys/resources/views/**/*';
