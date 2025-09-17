@@ -70,16 +70,6 @@ class AccountResource extends Resource
                                 TextInput::make('short_name')
                                     ->required()
                                     ->maxLength(15),
-                                TextInput::make('authorisation_contact')
-                                    ->required()
-                                    ->maxLength(100),
-                                TextInput::make('max_hourly_labour_rate')
-                                    ->required()
-                                    ->prefix('£'),
-                            ]),
-                        Grid::make()
-                            ->columns(3)
-                            ->schema([
                                 FileUpload::make('logo_path')
                                     ->directory('logos')
                                     ->image()
