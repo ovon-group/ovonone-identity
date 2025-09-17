@@ -65,10 +65,7 @@ class UserResource extends Resource
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
-                        TextInput::make('first_name')
-                            ->required()
-                            ->maxLength(25),
-                        TextInput::make('last_name')
+                        TextInput::make('name')
                             ->required()
                             ->maxLength(25),
                         TextInput::make('email')
@@ -107,9 +104,7 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('last_name')
-                    ->label('Name')
-                    ->getStateUsing(fn (User $record) => $record->last_name.', '.$record->first_name)
+                TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
                     ->searchable(),

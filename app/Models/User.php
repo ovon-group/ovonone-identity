@@ -69,11 +69,6 @@ class User extends Authenticatable implements FilamentUser, HasPasskeys
         return $this->is_internal;
     }
 
-    public function getNameAttribute():string
-    {
-        return $this->first_name . ' ' . $this->last_name;
-    }
-
     public function canImpersonate(): bool
     {
         return true; // TODO

@@ -13,8 +13,6 @@ Route::middleware('auth:api')->group(function () {
         return [
             'id' => $user->uuid,
             'name' => $user->name,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
             'email' => $user->email,
             'is_internal' => $user->is_internal,
             'accounts' => [],
@@ -90,8 +88,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                         ->withTrashed()
                         ->updateOrCreate(['uuid' => $userData['uuid']], Arr::only($userData, [
                             'name',
-                            'first_name',
-                            'last_name',
+                            'name',
                             'name',
                             'email',
                             'is_internal',
