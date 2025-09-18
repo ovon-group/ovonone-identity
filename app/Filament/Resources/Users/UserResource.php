@@ -8,6 +8,7 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\RelationManagers\AccountsRelationManager;
 use App\Models\Account;
+use App\Models\Role;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -58,13 +59,14 @@ class UserResource extends Resource
                             ->relationship(
                                 name: 'roles',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: function (User $record, Get $get, $query) {
-                                    $applications = Account::find($get('accounts'))->pluck('applications')->flatten()->unique();
-                                    return $query
-                                        ->whereIn('app', $applications)
-                                        ->where('is_internal', $record->is_internal);
-                                }
+                                modifyQueryUsing: fn(User $record, Get $get, $query) => $query
+                                    ->whereIn('app', Account::find($get('accounts'))
+                                                            ->pluck('applications')
+                                                            ->flatten()
+                                                            ->unique())
+                                    ->where('is_internal', $record->is_internal)
                             )
+                            ->getOptionLabelFromRecordUsing(fn (Role $record) => $record->getFilamentName())
                             ->preload(),
                     ]),
             ]);
@@ -113,10 +115,7 @@ class UserResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            AccountsRelationManager::class,
-            //            AuditsRelationManager::class,
-        ];
+        return [];
     }
 
     public static function getPages(): array
