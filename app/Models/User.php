@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
 use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
 
-class User extends Authenticatable implements FilamentUser, HasPasskeys
+class User extends Authenticatable implements FilamentUser, HasPasskeys, HasName
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes, HasUuids, InteractsWithPasskeys;
@@ -62,5 +62,10 @@ class User extends Authenticatable implements FilamentUser, HasPasskeys
     {
         return true; // TODO
         return $this->hasPermissionTo('users.impersonate');
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->name;
     }
 }

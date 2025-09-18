@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Livewire\Profile;
 use Filament\Auth\Pages\EditProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -34,7 +33,7 @@ class AppPanelProvider extends PanelProvider
             ->profile(EditProfile::class, false)
             ->viteTheme('resources/css/filament/app/theme.css')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
