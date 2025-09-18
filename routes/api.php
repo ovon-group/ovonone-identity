@@ -9,15 +9,11 @@ use Spatie\Permission\Models\Permission;
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
+        /** @var User $user */
         $user = $request->user();
-        return [
-            'id' => $user->uuid,
-            'name' => $user->name,
-            'email' => $user->email,
-            'is_internal' => $user->is_internal,
-            'accounts' => [],
-            'roles' => $user->roles->pluck('name'),
-        ];
+        $application = $user->token()->client->name;
+
+        return $user->applicationPayload($application);
     });
 
 

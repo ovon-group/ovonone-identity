@@ -6,7 +6,6 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
-use App\Filament\Resources\Users\RelationManagers\AccountsRelationManager;
 use App\Models\Account;
 use App\Models\Role;
 use App\Models\User;
@@ -16,6 +15,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -34,41 +34,53 @@ class UserResource extends Resource
                 Section::make()
                     ->columnSpanFull()
                     ->columns(2)
-                    ->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(25),
-                        TextInput::make('email')
-                            ->email()
-                            ->required()
-                            ->unique(ignoreRecord: true)
-                            ->maxLength(50),
-                        Select::make('accounts')
-                            ->live()
-                            ->multiple()
-                            ->visible(fn (User $record) => $record->is_internal === false)
-                            ->relationship(
-                                name: 'accounts',
-                                titleAttribute: 'name',
-                            )
-                            ->preload()
-                            ->required()
-                            ->minItems(1),
-                        Select::make('roles')
-                            ->multiple()
-                            ->relationship(
-                                name: 'roles',
-                                titleAttribute: 'name',
-                                modifyQueryUsing: fn(User $record, Get $get, $query) => $query
-                                    ->whereIn('app', Account::find($get('accounts'))
-                                                            ->pluck('applications')
-                                                            ->flatten()
-                                                            ->unique())
-                                    ->where('is_internal', $record->is_internal)
-                            )
-                            ->getOptionLabelFromRecordUsing(fn (Role $record) => $record->getFilamentName())
-                            ->preload(),
-                    ]),
+                    ->schema(function (?User $record, Get $get) {
+                        $isInternal = (bool) ($record ? $record->is_internal : $get('is_internal'));
+
+                        return [
+                            Toggle::make('is_internal')
+                                ->visibleOn('create')
+                                ->columnSpanFull()
+                                ->live(),
+                            TextInput::make('name')
+                                ->required()
+                                ->maxLength(25),
+                            TextInput::make('email')
+                                ->email()
+                                ->required()
+                                ->unique(ignoreRecord: true)
+                                ->maxLength(50),
+                            Select::make('accounts')
+                                ->live()
+                                ->multiple()
+                                ->hidden($isInternal)
+                                ->relationship(
+                                    name: 'accounts',
+                                    titleAttribute: 'name',
+                                )
+                                ->preload()
+                                ->required()
+                                ->minItems(1),
+                            Select::make('roles')
+                                ->multiple()
+                                ->relationship(
+                                    name: 'roles',
+                                    titleAttribute: 'name',
+                                    modifyQueryUsing: fn (?User $record, Get $get, $query) => $query
+                                        ->when(
+                                            $isInternal,
+                                            fn ($q) => $q->where('is_internal', true),
+                                            fn ($q) => $q->whereIn('app', Account::find($get('accounts'))
+                                                ->pluck('applications')
+                                                ->flatten()
+                                                ->unique()
+                                            ),
+                                        )
+                                )
+                                ->getOptionLabelFromRecordUsing(fn (Role $record) => $record->getFilamentName())
+                                ->preload(),
+                        ];
+                    }),
             ]);
     }
 

@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Enums\ApplicationEnum;
 use App\Models\Traits\HasUuids;
+use App\Observers\AccountObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy([AccountObserver::class])]
 class Account extends Model
 {
     /** @use HasFactory<\Database\Factories\AccountFactory> */

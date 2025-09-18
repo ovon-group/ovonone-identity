@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\StoreRefererInSession;
 use Filament\Auth\Pages\EditProfile;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -30,7 +31,7 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             // ->login()
-            ->profile(EditProfile::class, false)
+            ->profile(EditProfile::class)
             ->viteTheme('resources/css/filament/app/theme.css')
             ->colors([
                 'primary' => Color::Blue,
@@ -55,6 +56,7 @@ class AppPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                StoreRefererInSession::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
