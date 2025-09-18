@@ -13,6 +13,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -69,8 +70,7 @@ class AccountResource extends Resource
                                         'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml',
                                     ])
                                     ->imageEditor(),
-                                Select::make('applications')
-                                    ->multiple()
+                                CheckboxList::make('applications')
                                     ->options(ApplicationEnum::class),
                             ]),
 
