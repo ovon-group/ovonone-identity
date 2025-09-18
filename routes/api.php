@@ -109,12 +109,14 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                 'is_internal' => $roleData['is_internal'],
             ]);
 
-//            $role->syncPermissions($roleData['permissions']);
-
+            $role->syncPermissions(collect($roleData['permissions'])->pluck('name'));
         }
+
+        $deleted = Permission::doesntHave('roles')->delete();
 
         return [
             'success' => true,
+            'deleted' => $deleted,
         ];
     });
 

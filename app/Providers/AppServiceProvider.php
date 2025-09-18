@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Client;
+use App\Models\User;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Passport\Contracts\AuthorizationViewResponse;
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::unguard();
+
+        Relation::enforceMorphMap([
+            'user' => User::class,
+        ]);
 
         Str::macro('shortName', function (string $string) {
             return Str::of($string)->headline()->title()->explode(' ')->first();

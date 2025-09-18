@@ -23,17 +23,6 @@ class User extends Authenticatable implements FilamentUser, HasPasskeys
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes, HasUuids, InteractsWithPasskeys;
 
-//    /**
-//     * The attributes that are mass assignable.
-//     *
-//     * @var list<string>
-//     */
-//    protected $fillable = [
-//        'name',
-//        'email',
-//        'password',
-//    ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -53,14 +42,14 @@ class User extends Authenticatable implements FilamentUser, HasPasskeys
     {
         return [
             'email_verified_at' => 'datetime',
-//            'password' => 'hashed',
+            'password' => 'hashed',
             'is_internal' => 'boolean',
         ];
     }
 
     public function accounts(): BelongsToMany
     {
-        return $this->belongsToMany(Account::class);
+        return $this->belongsToMany(Account::class)->withTimestamps();
     }
 
     public function canAccessPanel(Panel $panel): bool
