@@ -21,6 +21,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -115,8 +116,10 @@ class UserResource extends Resource
                 TextColumn::make('accounts.name')
                     ->listWithLineBreaks()
                     ->searchable(),
-                TextColumn::make('roles.name')
+                TextColumn::make('roles')
                     ->listWithLineBreaks()
+                    ->badge()
+                    ->getStateUsing(fn (User $record) => $record->roles->map->getFilamentName())
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -133,6 +136,15 @@ class UserResource extends Resource
             ])
             ->filters([
                 TrashedFilter::make(),
+                SelectFilter::make('accounts')
+                    ->relationship('accounts', 'name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('roles')
+                    ->relationship('roles', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->getOptionLabelFromRecordUsing(fn (Role $record) => $record->getFilamentName()),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -163,8 +175,8 @@ class UserResource extends Resource
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
         return parent::getRecordRouteBindingEloquentQuery()
-                     ->withoutGlobalScopes([
-                         SoftDeletingScope::class,
-                     ]);
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }
