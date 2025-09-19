@@ -19,6 +19,13 @@ class Client extends PassportClient
      */
     public function skipsAuthorization(Authenticatable $user, array $scopes): bool
     {
-        return $this->firstParty();
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        // This override prevents applications from being authorised if
+        // the user does not belong to an account with access to it
+
+        return $user->canAccessApplication(ApplicationEnum::from($this->name));
     }
 }

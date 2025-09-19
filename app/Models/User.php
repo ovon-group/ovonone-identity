@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Enums\ApplicationEnum;
 use App\Models\Traits\HasUuids;
 use App\Observers\UserObserver;
 use Filament\Models\Contracts\FilamentUser;
@@ -80,9 +81,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
             'id' => $this->uuid,
             'name' => $this->name,
             'email' => $this->email,
+            'mobile' => $this->mobile,
             'is_internal' => $this->is_internal,
             'accounts' => $this->accounts()->whereJsonContains('applications', $application)->pluck('uuid'),
             'roles' => $this->roles()->where('app', $application)->pluck('name'),
+            'deleted_at' => $this->deleted_at,
         ];
     }
 
@@ -93,5 +96,12 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
             ->flatten()
             ->unique()
             ->all();
+    }
+
+    public function canAccessApplication(ApplicationEnum $application): bool
+    {
+        return $this->accounts()
+            ->whereJsonContains('applications', $application)
+            ->exists();
     }
 }

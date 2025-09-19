@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Laravel\Passport\Contracts\AuthorizationViewResponse;
-use Laravel\Passport\Http\Responses\SimpleViewResponse;
 use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,11 +16,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        //
-//        $this->app->bind(AuthorizationViewResponse::class, SimpleViewResponse::class);
-    }
+    public function register(): void {}
 
     /**
      * Bootstrap any application services.
@@ -39,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
             return Str::of($string)->headline()->title()->explode(' ')->first();
         });
 
-        Passport::authorizationView(fn() => null);
+        Passport::authorizationView('auth.denied');
 
         Passport::useClientModel(Client::class);
 

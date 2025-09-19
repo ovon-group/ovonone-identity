@@ -8,15 +8,7 @@ use Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner;
 use Spatie\Permission\Models\Permission;
 
 Route::middleware('auth:api')->group(function () {
-    Route::get('/user', function (Request $request) {
-        /** @var User $user */
-        $user = $request->user();
-        $application = $user->token()->client->name;
-
-        return $user->applicationPayload($application);
-    });
-
-
+    Route::get('/user', [\App\Http\Controllers\AuthController::class, 'user']);
 });
 
 Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
@@ -115,6 +107,5 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             'deleted' => $deleted,
         ];
     });
-
 
 });

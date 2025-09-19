@@ -28,4 +28,19 @@ class Account extends Model
             'applications' => AsEnumCollection::of(ApplicationEnum::class),
         ];
     }
+
+    public function applicationPayload()
+    {
+        return [
+            'id' => $this->uuid,
+            'name' => $this->name,
+            'short_name' => $this->short_name,
+
+        ];
+    }
+
+    public function getApplications()
+    {
+        return $this->applications;
+    }
 }

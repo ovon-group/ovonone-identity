@@ -21,7 +21,10 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
@@ -50,6 +53,9 @@ class UserResource extends Resource
                                 ->required()
                                 ->unique(ignoreRecord: true)
                                 ->maxLength(50),
+                            TextInput::make('mobile')
+                                ->unique(ignoreRecord: true)
+                                ->maxLength(20),
                             Select::make('accounts')
                                 ->live()
                                 ->multiple()
@@ -66,16 +72,21 @@ class UserResource extends Resource
                                 ->relationship(
                                     name: 'roles',
                                     titleAttribute: 'name',
-                                    modifyQueryUsing: fn (?User $record, Get $get, $query) => $query
+                                    modifyQueryUsing: fn (
+                                        ?User $record,
+                                        Get $get,
+                                        Builder $query,
+                                    ) => $query
+                                        ->where('is_internal', $isInternal)
                                         ->when(
                                             $isInternal,
-                                            fn ($q) => $q->where('is_internal', true),
+                                            fn ($q) => $q,
                                             fn ($q) => $q->whereIn('app', Account::find($get('accounts'))
                                                 ->pluck('applications')
                                                 ->flatten()
-                                                ->unique()
+                                                ->unique(),
                                             ),
-                                        )
+                                        ),
                                 )
                                 ->getOptionLabelFromRecordUsing(fn (Role $record) => $record->getFilamentName())
                                 ->preload(),
@@ -112,7 +123,7 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -138,5 +149,13 @@ class UserResource extends Resource
             'edit' => EditUser::route('/{record}/edit'),
             'view' => ViewUser::route('/{record}'),
         ];
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+                     ->withoutGlobalScopes([
+                         SoftDeletingScope::class,
+                     ]);
     }
 }

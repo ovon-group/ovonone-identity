@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ApplicationEnum;
+use App\Models\Account;
 use App\Models\User;
 use Closure;
 use Illuminate\Support\Facades\Http;
@@ -23,10 +24,21 @@ class ApplicationService
         $this->forAllApplications(function (ApplicationEnum $application) use ($user) {
             $this->for($application)
                  ->postRequest(
-                     "users/{$user->uuid}",
+                     'users',
                      ['user' => $user->applicationPayload($this->application)]
                  );
         }, $user->getApplications());
+    }
+
+    public function pushAccount(Account $account)
+    {
+        $this->forAllApplications(function (ApplicationEnum $application) use ($account) {
+            $this->for($application)
+                 ->postRequest(
+                     'accounts',
+                     ['account' => $account->applicationPayload()]
+                 );
+        }, $account->getApplications());
     }
 
     private function postRequest(string $url, array $payload)

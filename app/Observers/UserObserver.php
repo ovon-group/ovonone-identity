@@ -12,9 +12,17 @@ class UserObserver
     }
 
     /**
-     * Handle the User "updated" event.
+     * Handle the User "saved" event.
      */
-    public function updated(User $user): void
+    public function saved(User $user): void
+    {
+        $this->applicationService->pushUser($user);
+    }
+
+    /**
+     * Handle the User "deleted" event.
+     */
+    public function deleted(User $user): void
     {
         $this->applicationService->pushUser($user);
     }

@@ -1,0 +1,3 @@
+<div>
+    Authorisation denied
+</div>
