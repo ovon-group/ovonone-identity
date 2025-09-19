@@ -13,14 +13,24 @@ Route::middleware('auth:api')->group(function () {
 
 Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
     Route::post('accounts', function (Request $request) {
-        $mappedAccounts = collect($request->accounts)
+        $request->validate([
+            'accounts' => 'array',
+            'accounts.*.name' => 'required|string',
+            'accounts.*.short_name' => 'nullable|string',
+            'accounts.*.deleted_at' => 'nullable|date',
+        ]);
+
+        $mappedAccounts = collect($request->accounts ?? [])
             ->map(function ($accountData) {
-                $account = Account::updateOrCreate(
-                    ['name' => $accountData['name']],
-                    [
-                        'short_name' => $accountData['short_name'] ?? \Illuminate\Support\Str::shortName($accountData['name']),
-                    ],
-                );
+                $account = Account::query()
+                    ->withTrashed()
+                    ->updateOrCreate(
+                        ['name' => $accountData['name']],
+                        [
+                            'short_name' => $accountData['short_name'] ?? \Illuminate\Support\Str::shortName($accountData['name']),
+                            'deleted_at' => $accountData['deleted_at'] ?? null,
+                        ],
+                    );
                 return $account->only(['uuid', 'name']);
             });
 
@@ -31,26 +41,24 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
     Route::post('users', function (Request $request) {
         $users = collect($request->users)->map(function ($userData) {
-            $user = User::withoutEvents(function () use ($userData) {
-                return User::query()
-                        ->withTrashed()
-                        ->updateOrCreate(
-                            $userData['email']
-                                ? ['email' => $userData['email']]
-                                : array_filter(Arr::only($userData, [
-                                    'name',
-                                    'mobile',
-                                ])),
-                            Arr::only($userData, [
+            $user = User::query()
+                    ->withTrashed()
+                    ->updateOrCreate(
+                        isset($userData['email']) && $userData['email']
+                            ? ['email' => $userData['email']]
+                            : array_filter(Arr::only($userData, [
                                 'name',
-                                'email',
                                 'mobile',
-                                'is_internal',
-                                'email_verified_at',
-                                'password',
-                                'deleted_at',
-                            ]));
-            });
+                            ])),
+                        Arr::only($userData, [
+                            'name',
+                            'email',
+                            'mobile',
+                            'is_internal',
+                            'email_verified_at',
+                            'password',
+                            'deleted_at',
+                        ]));
 
             $user->syncRoles($userData['roles'] ?? []);
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));

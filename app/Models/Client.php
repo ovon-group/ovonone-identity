@@ -4,14 +4,11 @@ namespace App\Models;
 
 use App\Enums\ApplicationEnum;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Laravel\Passport\Client as PassportClient;
 
 class Client extends PassportClient
 {
-//    protected $casts = [
-//        'name' => ApplicationEnum::class,
-//    ];
-
     /**
      * Determine if the client should skip the authorization prompt.
      *
