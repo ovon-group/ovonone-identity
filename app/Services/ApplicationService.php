@@ -61,7 +61,11 @@ class ApplicationService
     private function forAllApplications($applications, Closure $callback)
     {
         foreach ($applications as $application) {
-            $callback($application);
+            try {
+                $callback($application);
+            } catch (\Throwable $throwable) {
+                report($throwable);
+            }
         }
     }
 }

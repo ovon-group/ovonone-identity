@@ -2,19 +2,17 @@
 
 namespace App\Observers;
 
+use App\Jobs\SyncAccountWithApplications;
 use App\Models\Account;
-use App\Services\ApplicationService;
 
 class AccountObserver
 {
-    public function __construct(protected ApplicationService $applicationService) {}
-
     /**
      * Handle the Account "saved" event.
      */
     public function saved(Account $account): void
     {
-        $this->applicationService->pushAccount($account);
+        SyncAccountWithApplications::dispatch($account);
     }
 
     /**
@@ -22,6 +20,6 @@ class AccountObserver
      */
     public function deleted(Account $account): void
     {
-        $this->applicationService->pushAccount($account);
+        SyncAccountWithApplications::dispatch($account);
     }
 }
