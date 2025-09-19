@@ -37,7 +37,6 @@ class AppServiceProvider extends ServiceProvider
 
         Passport::useClientModel(Client::class);
 
-        Passport::tokensExpireIn(CarbonInterval::minutes(15));
-        Passport::refreshTokensExpireIn(CarbonInterval::minutes(120));
+        Passport::tokensExpireIn(CarbonInterval::minutes(60));
     }
 }
