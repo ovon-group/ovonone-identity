@@ -16,8 +16,6 @@ beforeEach(function () {
         'redirect_uris' => '["http://localhost"]',
         'grant_types' => '["client_credentials"]',
         'revoked' => false,
-        'personal_access_client' => false,
-        'password_client' => false,
     ]);
 
     Passport::actingAsClient($this->client);

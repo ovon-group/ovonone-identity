@@ -13,10 +13,7 @@ use Laravel\Passport\Passport;
 
 beforeEach(function () {
     // Create OAuth client for API authentication
-    $this->client = Client::factory()->create([
-        'personal_access_client' => false,
-        'password_client' => true,
-    ]);
+    $this->client = Client::factory()->create();
 
     Passport::actingAsClient($this->client);
 });

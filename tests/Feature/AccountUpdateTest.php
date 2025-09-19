@@ -17,8 +17,6 @@ beforeEach(function () {
         'redirect_uris' => '["http://localhost"]',
         'grant_types' => '["client_credentials"]',
         'revoked' => false,
-        'personal_access_client' => false,
-        'password_client' => false,
     ]);
 
     // Skip authentication for tests that need to test unauthenticated access
