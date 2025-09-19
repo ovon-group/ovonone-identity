@@ -147,6 +147,6 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
      */
     public function routeNotificationForTwilio(): ?string
     {
-        return str_starts_with($this->mobile, '0') ? '+44'.ltrim($this->mobile, '0') : $this->mobile;
+        return str_starts_with($this->mobile, '0') ? '+44'.ltrim($this->mobile, '0') : (str_starts_with($this->mobile, '44') ? '+'.$this->mobile : $this->mobile);
     }
 }
