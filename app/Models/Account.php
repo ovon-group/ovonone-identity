@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([AccountObserver::class])]
 class Account extends Model
@@ -16,6 +17,7 @@ class Account extends Model
     /** @use HasFactory<\Database\Factories\AccountFactory> */
     use HasFactory;
     use HasUuids;
+    use SoftDeletes;
 
     /**
      * Get the attributes that should be cast.
@@ -29,18 +31,18 @@ class Account extends Model
         ];
     }
 
-    public function applicationPayload()
+    public function applicationPayload(): array
     {
-        return [
-            'id' => $this->uuid,
-            'name' => $this->name,
-            'short_name' => $this->short_name,
-
-        ];
+        return $this->only([
+            'uuid',
+            'name',
+            'short_name',
+            'deleted_at',
+        ]);
     }
 
-    public function getApplications()
+    public function getApplications(): array
     {
-        return $this->applications;
+        return $this->applications->toArray();
     }
 }

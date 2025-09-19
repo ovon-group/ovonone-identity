@@ -7,9 +7,7 @@ use App\Services\ApplicationService;
 
 class UserObserver
 {
-    public function __construct(protected ApplicationService $applicationService)
-    {
-    }
+    public function __construct(protected ApplicationService $applicationService) {}
 
     /**
      * Handle the User "saved" event.

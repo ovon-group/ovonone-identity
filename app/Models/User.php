@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\HasApiTokens;
 use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
 use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
@@ -78,7 +79,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
     public function applicationPayload($application)
     {
         return [
-            'id' => $this->uuid,
+            'uuid' => $this->uuid,
             'name' => $this->name,
             'email' => $this->email,
             'mobile' => $this->mobile,
@@ -91,6 +92,10 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
 
     public function getApplications(): array
     {
+        if ($this->is_internal) {
+            return ApplicationEnum::cases();
+        }
+
         return $this->accounts()
             ->pluck('applications')
             ->flatten()

@@ -3,23 +3,18 @@
 namespace App\Observers;
 
 use App\Models\Account;
+use App\Services\ApplicationService;
 
 class AccountObserver
 {
-    /**
-     * Handle the Account "created" event.
-     */
-    public function created(Account $account): void
-    {
-        //
-    }
+    public function __construct(protected ApplicationService $applicationService) {}
 
     /**
-     * Handle the Account "updated" event.
+     * Handle the Account "saved" event.
      */
-    public function updated(Account $account): void
+    public function saved(Account $account): void
     {
-        //
+        $this->applicationService->pushAccount($account);
     }
 
     /**
@@ -27,22 +22,6 @@ class AccountObserver
      */
     public function deleted(Account $account): void
     {
-        //
-    }
-
-    /**
-     * Handle the Account "restored" event.
-     */
-    public function restored(Account $account): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Account "force deleted" event.
-     */
-    public function forceDeleted(Account $account): void
-    {
-        //
+        $this->applicationService->pushAccount($account);
     }
 }

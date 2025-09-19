@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Accounts\Pages;
 
 use App\Filament\Resources\Accounts\AccountResource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Enums\Width;
 
@@ -19,6 +21,8 @@ class EditAccount extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            RestoreAction::make(),
+            ViewAction::make(),
             DeleteAction::make(),
         ];
     }
