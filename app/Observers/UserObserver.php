@@ -2,21 +2,17 @@
 
 namespace App\Observers;
 
+use App\Jobs\SyncUserWithApplications;
 use App\Models\User;
-use App\Services\ApplicationService;
 
 class UserObserver
 {
-    public function __construct(protected ApplicationService $applicationService)
-    {
-    }
-
     /**
      * Handle the User "saved" event.
      */
     public function saved(User $user): void
     {
-        $this->applicationService->pushUser($user);
+        SyncUserWithApplications::dispatch($user);
     }
 
     /**
@@ -24,6 +20,6 @@ class UserObserver
      */
     public function deleted(User $user): void
     {
-        $this->applicationService->pushUser($user);
+        SyncUserWithApplications::dispatch($user);
     }
 }

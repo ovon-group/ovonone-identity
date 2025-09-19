@@ -21,24 +21,30 @@ class ApplicationService
 
     public function pushUser(User $user)
     {
-        $this->forAllApplications(function (ApplicationEnum $application) use ($user) {
-            $this->for($application)
-                 ->postRequest(
-                     'users',
-                     ['user' => $user->applicationPayload($this->application)]
-                 );
-        }, $user->getApplications());
+        $this->forAllApplications(
+            $user->getApplications(),
+            function (ApplicationEnum $application) use ($user) {
+                $this->for($application)
+                    ->postRequest(
+                        'users',
+                        ['user' => $user->applicationPayload($this->application)]
+                    );
+            }
+        );
     }
 
     public function pushAccount(Account $account)
     {
-        $this->forAllApplications(function (ApplicationEnum $application) use ($account) {
-            $this->for($application)
-                 ->postRequest(
-                     'accounts',
-                     ['account' => $account->applicationPayload()]
-                 );
-        }, $account->getApplications());
+        $this->forAllApplications(
+            $account->getApplications(),
+            function (ApplicationEnum $application) use ($account) {
+                $this->for($application)
+                    ->postRequest(
+                        'accounts',
+                        ['account' => $account->applicationPayload()]
+                    );
+            }
+        );
     }
 
     private function postRequest(string $url, array $payload)
@@ -52,10 +58,14 @@ class ApplicationService
         }
     }
 
-    private function forAllApplications(Closure $callback, ?array $applications = null)
+    private function forAllApplications($applications, Closure $callback)
     {
-        foreach ($applications ?: ApplicationEnum::cases() as $application) {
-            $callback($application);
+        foreach ($applications as $application) {
+            try {
+                $callback($application);
+            } catch (\Throwable $throwable) {
+                report($throwable);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ use App\Filament\Resources\Users\RelationManagers\AccountsRelationManager;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Contracts\Support\Htmlable;
@@ -27,6 +28,7 @@ class EditUser extends EditRecord
             Impersonate::make()
                 ->visible(fn (User $user) => Auth::user()->canImpersonate($user))
                 ->record($this->getRecord()),
+            RestoreAction::make(),
             ViewAction::make(),
             DeleteAction::make(),
         ];

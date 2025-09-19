@@ -2,24 +2,17 @@
 
 namespace App\Observers;
 
+use App\Jobs\SyncAccountWithApplications;
 use App\Models\Account;
 
 class AccountObserver
 {
     /**
-     * Handle the Account "created" event.
+     * Handle the Account "saved" event.
      */
-    public function created(Account $account): void
+    public function saved(Account $account): void
     {
-        //
-    }
-
-    /**
-     * Handle the Account "updated" event.
-     */
-    public function updated(Account $account): void
-    {
-        //
+        SyncAccountWithApplications::dispatch($account);
     }
 
     /**
@@ -27,22 +20,6 @@ class AccountObserver
      */
     public function deleted(Account $account): void
     {
-        //
-    }
-
-    /**
-     * Handle the Account "restored" event.
-     */
-    public function restored(Account $account): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Account "force deleted" event.
-     */
-    public function forceDeleted(Account $account): void
-    {
-        //
+        SyncAccountWithApplications::dispatch($account);
     }
 }

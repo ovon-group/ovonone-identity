@@ -24,10 +24,6 @@ class AppLauncher extends Widget
 
     protected function getApplications(): array
     {
-        if (Auth::user()->is_internal) {
-            return ApplicationEnum::cases();
-        }
-
         return Auth::user()->getApplications();
     }
 }
