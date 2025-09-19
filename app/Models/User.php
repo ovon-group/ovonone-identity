@@ -11,6 +11,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,13 +20,14 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
 use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
+use Spatie\OneTimePasswords\Models\Concerns\HasOneTimePasswords;
 use Spatie\Permission\Traits\HasRoles;
 
 #[ObservedBy([UserObserver::class])]
 class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, HasUuids, InteractsWithPasskeys, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasOneTimePasswords, HasRoles, HasUuids, InteractsWithPasskeys, Notifiable, SoftDeletes;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -107,5 +109,39 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
         return $this->accounts()
             ->whereJsonContains('applications', $application)
             ->exists();
+    }
+
+    /**
+     * Send OTP via email
+     */
+    public function sendOneTimePasswordViaEmail(): self
+    {
+        $oneTimePassword = $this->createOneTimePassword();
+        $this->notify(new \App\Notifications\OneTimePasswordNotification($oneTimePassword, 'mail'));
+        
+        return $this;
+    }
+
+    /**
+     * Send OTP via SMS
+     */
+    public function sendOneTimePasswordViaSms(): self
+    {
+        if (!$this->mobile) {
+            throw new \Exception('User does not have a mobile number');
+        }
+        
+        $oneTimePassword = $this->createOneTimePassword();
+        $this->notify(new \App\Notifications\OneTimePasswordNotification($oneTimePassword, 'sms'));
+        
+        return $this;
+    }
+
+    /**
+     * Get the phone number for SMS notifications
+     */
+    public function routeNotificationForTwilio(): ?string
+    {
+        return str_starts_with($this->mobile, '0') ? '+44'.ltrim($this->mobile, '0') : $this->mobile;
     }
 }
