@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('oauth_clients', function (Blueprint $table) {
-            $table->boolean('personal_access_client')->default(false);
-            $table->boolean('password_client')->default(false);
+            $table->boolean('personal_access_client')->default(false)->after('revoked');
+            $table->boolean('password_client')->default(false)->after('personal_access_client');
         });
     }
 

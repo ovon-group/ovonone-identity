@@ -9,43 +9,6 @@ use Laravel\Passport\Client as PassportClient;
 
 class Client extends PassportClient
 {
-    protected $casts = [
-        'grant_types' => 'array',
-        'redirect_uris' => 'array',
-    ];
-
-    /**
-     * Get the grant types for the client.
-     */
-    protected function grantTypes(): Attribute
-    {
-        return Attribute::make(
-            get: function (?string $value): array {
-                if ($value) {
-                    $decoded = json_decode($value, true);
-                    return is_array($decoded) ? $decoded : ['personal_access'];
-                }
-                return ['personal_access'];
-            }
-        );
-    }
-
-    protected function redirectUris(): Attribute
-    {
-        return Attribute::make(
-            get: function (?string $value, array $attributes): array {
-                if (!empty($value)) {
-                    $decoded = json_decode($value, true);
-                    return is_array($decoded) ? $decoded : [];
-                }
-                if (!empty($attributes['redirect'])) {
-                    return explode(',', $attributes['redirect']);
-                }
-                return [];
-            }
-        );
-    }
-
     /**
      * Determine if the client should skip the authorization prompt.
      *
