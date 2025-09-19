@@ -19,7 +19,7 @@ class EditUser extends EditRecord
 
     public function getTitle(): string
     {
-        return 'Edit' . $this->getRecord()->getFilamentName();
+        return 'Edit ' . $this->getRecord()->getFilamentName();
     }
 
     protected function getHeaderActions(): array
