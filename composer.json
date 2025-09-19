@@ -15,7 +15,8 @@
         "spatie/laravel-one-time-passwords": "^1.0",
         "spatie/laravel-passkeys": "^1.0",
         "spatie/laravel-permission": "^6.21",
-        "stechstudio/filament-impersonate": "^4.0"
+        "stechstudio/filament-impersonate": "^4.0",
+        "ysfkaya/filament-phone-input": "^4.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",

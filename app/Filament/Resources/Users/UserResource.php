@@ -25,6 +25,9 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use libphonenumber\PhoneNumberType;
+use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
+use Ysfkaya\FilamentPhoneInput\PhoneInputNumberType;
 
 class UserResource extends Resource
 {
@@ -53,9 +56,15 @@ class UserResource extends Resource
                                 ->required()
                                 ->unique(ignoreRecord: true)
                                 ->maxLength(50),
-                            TextInput::make('mobile')
-                                ->unique(ignoreRecord: true)
-                                ->maxLength(20),
+                            PhoneInput::make('mobile')
+                                ->defaultCountry('GB')
+                                ->validateFor(
+                                    country: 'GB',
+                                    type: PhoneNumberType::MOBILE,
+                                )
+                                ->inputNumberFormat(PhoneInputNumberType::E164)
+                                ->initialCountry('GB')
+                                ->unique(ignoreRecord: true),
                             Select::make('accounts')
                                 ->live()
                                 ->multiple()
