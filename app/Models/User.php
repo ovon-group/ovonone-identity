@@ -149,4 +149,12 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
     {
         return str_starts_with($this->mobile, '0') ? '+44'.ltrim($this->mobile, '0') : (str_starts_with($this->mobile, '44') ? '+'.$this->mobile : $this->mobile);
     }
+
+    /**
+     * Check if the user has a password set
+     */
+    public function hasPassword(): bool
+    {
+        return !is_null($this->password) && !empty($this->password);
+    }
 }

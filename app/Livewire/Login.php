@@ -22,6 +22,7 @@ class Login extends Component
     public $step = 1; // 1 = email/phone, 2 = auth methods, 3 = OTP input
     public $user = null;
     public $inputType = 'email'; // 'email' or 'phone'
+    public $userHasPassword = false;
     
     // OTP related properties
     public $otpCode = '';
@@ -45,7 +46,7 @@ class Login extends Component
         // Determine if input is email or phone number
         if ($this->isPhoneNumber($this->email)) {
             $this->inputType = 'phone';
-            $user = User::where('mobile', $this->normalizePhoneNumber($this->email))->first();
+            $user = User::whereIn('mobile', $this->normalizePhoneNumber($this->email))->first();
             
             if (!$user) {
                 throw ValidationException::withMessages([
@@ -54,6 +55,7 @@ class Login extends Component
             }
 
             $this->user = $user;
+            $this->userHasPassword = $user->hasPassword();
             $this->otpChannel = 'sms';
 
             // Send SMS OTP directly for phone numbers
@@ -84,6 +86,7 @@ class Login extends Component
             }
 
             $this->user = $user;
+            $this->userHasPassword = $user->hasPassword();
             $this->step = 2; // Move to authentication methods step
         }
     }
@@ -107,33 +110,47 @@ class Login extends Component
 
     private function normalizePhoneNumber($phone)
     {
+        $possibilities = [];
+
         // Remove all non-digit characters except +
         $cleaned = preg_replace('/[^+0-9]/', '', $phone);
         
         // Handle different phone number formats
         if (str_starts_with($cleaned, '+')) {
             // Already in international format (e.g., +447545191039)
-            return $cleaned;
+            $possibilities[] = $cleaned;
+            $possibilities[] = '0'.ltrim($cleaned, '+44');
         } elseif (str_starts_with($cleaned, '0')) {
             // National format (e.g., 07545191039 for UK)
-            return $cleaned;
+            $possibilities[] = $cleaned;
+            $possibilities[] = '+44' . ltrim($cleaned, '0');
+            $possibilities[] = '44' . ltrim($cleaned, '0');
         } else {
             // Assume international format without + (e.g., 447545191039)
-            return '+' . $cleaned;
+            $possibilities[] = '+' . $cleaned;
+            $possibilities[] = '0'.ltrim($cleaned, '44');
         }
+
+        return $possibilities;
     }
 
     public function loginWithPassword()
     {
-        $this->validate([
-            'password' => 'required|min:6',
-        ]);
-
         if (!$this->user) {
             throw ValidationException::withMessages([
                 'password' => 'Please start over by entering your email or phone number.',
             ]);
         }
+
+        if (!$this->userHasPassword) {
+            throw ValidationException::withMessages([
+                'password' => 'This account does not have a password set. Please use a different sign-in method.',
+            ]);
+        }
+
+        $this->validate([
+            'password' => 'required|min:6',
+        ]);
 
         // Use the user's email for authentication (even if they entered phone number)
         if (!Auth::attempt(['email' => $this->user->email, 'password' => $this->password], $this->remember)) {
@@ -208,7 +225,7 @@ class Login extends Component
 
     public function backToEmail()
     {
-        $this->reset(['password', 'otpCode', 'user', 'otpChannel', 'inputType']);
+        $this->reset(['password', 'otpCode', 'user', 'otpChannel', 'inputType', 'userHasPassword']);
         $this->step = 1;
     }
 

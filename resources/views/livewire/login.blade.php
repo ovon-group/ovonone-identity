@@ -78,7 +78,8 @@
                 </div>
 
                 {{-- Password Login --}}
-                <form wire:submit.prevent="loginWithPassword" class="space-y-4">
+                @if($userHasPassword)
+                    <form wire:submit.prevent="loginWithPassword" class="space-y-4">
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">
                             Password
@@ -138,17 +139,20 @@
                             <span wire:loading wire:target="loginWithPassword">Signing in...</span>
                         </button>
                     </div>
-                </form>
+                    </form>
+                @endif
 
                 {{-- Divider --}}
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
+                @if($userHasPassword)
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                        </div>
                     </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white text-gray-500">Or continue with</span>
-                    </div>
-                </div>
+                @endif
 
                 {{-- OTP Login Options --}}
                 <div class="grid grid-cols-2 gap-3">
