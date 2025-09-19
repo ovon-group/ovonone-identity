@@ -16,12 +16,5 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ClientSeeder::class,
         ]);
-
-        // Create a test user for login demonstration
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-        ]);
     }
 }

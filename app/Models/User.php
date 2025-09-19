@@ -100,6 +100,10 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
 
     public function canAccessApplication(ApplicationEnum $application): bool
     {
+        if ($this->is_internal) {
+            return true;
+        }
+
         return $this->accounts()
             ->whereJsonContains('applications', $application)
             ->exists();

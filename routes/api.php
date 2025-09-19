@@ -31,7 +31,8 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
     Route::post('users', function (Request $request) {
         $users = collect($request->users)->map(function ($userData) {
-            $user = User::query()
+            $user = User::withoutEvents(function () use ($userData) {
+                return User::query()
                         ->withTrashed()
                         ->updateOrCreate(
                             $userData['email']
@@ -49,6 +50,8 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                                 'password',
                                 'deleted_at',
                             ]));
+            });
+
             $user->syncRoles($userData['roles'] ?? []);
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
 
