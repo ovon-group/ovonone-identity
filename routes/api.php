@@ -25,7 +25,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         ]);
 
         $mappedAccounts = collect($validData['accounts'])
-            ->map(function ($accountData) use($validData) {
+            ->map(function ($accountData) use ($validData) {
                 $account = Account::query()
                     ->withTrashed()
                     ->updateOrCreate(
@@ -33,10 +33,10 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                         $accountData
                     );
 
-                $account->applications = array_unique([
-                    ...$account->applications->pluck('value')->toArray(),
-                    $validData['application'],
-                ]);
+                $account->applications = ($account->applications ?: collect())
+                    ->push(ApplicationEnum::from($validData['application']))
+                    ->unique()
+                    ->values();
 
                 $account->save();
 
@@ -92,8 +92,18 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         ];
     });
 
-    Route::post('{appName}/roles', function (Request $request, string $appName) {
-        $allPermissions = collect($request->roles)
+    Route::post('/roles', function (Request $request) {
+        $validData = $request->validate([
+            'application' => Rule::enum(ApplicationEnum::class),
+            'roles' => 'array',
+            'roles.*.name' => 'required|string',
+            'roles.*.guard_name' => 'required|string',
+            'roles.*.is_internal' => 'required|boolean',
+            'roles.*.permissions.*.name' => 'required|string',
+            'roles.*.permissions.*.guard_name' => 'required|string',
+        ]);
+
+        $allPermissions = collect($validData['roles'])
             ->pluck('permissions')
             ->flatten(1)
             ->unique()
@@ -102,7 +112,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         // Create permissions that don't exist
         Permission::upsert(
             $allPermissions->map(fn ($item) => [
-                'app' => $appName,
+                'app' => $validData['application'],
                 'name' => $item['name'],
                 'guard_name' => $item['guard_name'],
             ])->toArray(),
@@ -111,7 +121,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
         foreach ($request->roles as $roleData) {
             $role = Role::updateOrCreate([
-                'app' => $appName,
+                'app' => $validData['application'],
                 'name' => $roleData['name'],
             ], [
                 'guard_name' => $roleData['guard_name'],
@@ -120,7 +130,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             $role->syncPermissions(collect($roleData['permissions'])->pluck('name'));
         }
 
-        $rolesDeleted = Role::where('app', $appName)
+        $rolesDeleted = Role::where('app', $validData['application'])
             ->whereNotIn('name', collect($request->roles)->pluck('name'))
             ->delete();
 

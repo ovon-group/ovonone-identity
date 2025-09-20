@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\ApplicationEnum;
 use App\Models\Client;
 use App\Models\User;
 use Carbon\CarbonInterval;
@@ -38,5 +39,13 @@ class AppServiceProvider extends ServiceProvider
         Passport::useClientModel(Client::class);
 
         Passport::tokensExpireIn(CarbonInterval::minutes(60));
+
+        Passport::tokensCan(
+            collect(ApplicationEnum::cases())
+                ->mapWithKeys(fn (ApplicationEnum $application) => [
+                    "application:{$application->value}" => "Access data for {$application->getLabel()}"]
+                )
+                ->toArray()
+        );
     }
 }
