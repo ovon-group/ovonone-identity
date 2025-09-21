@@ -3,6 +3,7 @@
 use App\Enums\ApplicationEnum;
 use App\Models\Account;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\Rule;
@@ -16,6 +17,8 @@ Route::middleware('auth:api')->group(function () {
 
 Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
     Route::post('accounts', function (Request $request) {
+        $application = ApplicationEnum::from(auth('api')->client()->name);
+
         $validData = $request->validate([
             'application' => Rule::enum(ApplicationEnum::class),
             'accounts' => 'array',
@@ -24,8 +27,8 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             'accounts.*.deleted_at' => 'nullable|date',
         ]);
 
-        $mappedAccounts = collect($validData['accounts'])
-            ->map(function ($accountData) use ($validData) {
+        $mappedAccounts = Model::withoutEvents(fn() => collect($validData['accounts'])
+            ->map(function ($accountData) use ($validData, $application) {
                 $account = Account::query()
                     ->withTrashed()
                     ->updateOrCreate(
@@ -34,14 +37,14 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                     );
 
                 $account->applications = ($account->applications ?: collect())
-                    ->push(ApplicationEnum::from($validData['application']))
+                    ->push($application)
                     ->unique()
                     ->values();
 
                 $account->save();
 
                 return $account->only(['uuid', 'name']);
-            });
+            }));
 
         return [
             'accounts' => $mappedAccounts,
@@ -50,7 +53,6 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
     Route::post('users', function (Request $request) {
         $request->validate([
-            'application' => Rule::enum(ApplicationEnum::class),
             'users' => 'array',
             'users.*.name' => 'required|string',
             'users.*.email' => 'nullable|email',
@@ -61,7 +63,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             'users.*.password' => 'nullable',
         ]);
 
-        $users = collect($request->users)->map(function ($userData) {
+        $users = Model::withoutEvents(fn () => collect($request->users)->map(function ($userData) {
             $user = User::query()
                 ->withTrashed()
                 ->updateOrCreate(
@@ -85,7 +87,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
 
             return $user->only(['uuid', 'email', 'mobile', 'name']);
-        });
+        }));
 
         return [
             'users' => $users,
@@ -93,8 +95,9 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
     });
 
     Route::post('/roles', function (Request $request) {
+        $application = ApplicationEnum::from(auth('api')->client()->name);
+
         $validData = $request->validate([
-            'application' => Rule::enum(ApplicationEnum::class),
             'roles' => 'array',
             'roles.*.name' => 'required|string',
             'roles.*.guard_name' => 'required|string',
@@ -112,7 +115,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         // Create permissions that don't exist
         Permission::upsert(
             $allPermissions->map(fn ($item) => [
-                'app' => $validData['application'],
+                'app' => $application,
                 'name' => $item['name'],
                 'guard_name' => $item['guard_name'],
             ])->toArray(),
@@ -121,7 +124,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
         foreach ($request->roles as $roleData) {
             $role = Role::updateOrCreate([
-                'app' => $validData['application'],
+                'app' => $application,
                 'name' => $roleData['name'],
             ], [
                 'guard_name' => $roleData['guard_name'],
@@ -130,7 +133,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             $role->syncPermissions(collect($roleData['permissions'])->pluck('name'));
         }
 
-        $rolesDeleted = Role::where('app', $validData['application'])
+        $rolesDeleted = Role::where('app', $application)
             ->whereNotIn('name', collect($request->roles)->pluck('name'))
             ->delete();
 
