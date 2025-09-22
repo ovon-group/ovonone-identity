@@ -45,8 +45,8 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
     public function getIcon(): string
     {
         return match ($this) {
-            self::Protego => 'heroicon-o-wrench-screwdriver',
-            self::Wheel2Web => 'heroicon-o-cog-6-tooth',
+            self::Protego => 'heroicon-o-shield-check',
+            self::Wheel2Web => 'solar-wheel-linear',
         };
     }
 
