@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accounts', function (Blueprint $table) {
+        Schema::create('applications', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->string('short_name');
-            $table->string('name');
-            $table->string('logo_path')->nullable();
+            $table->string('name'); // e.g., "Protego", "Wheel2Web"
+//            $table->string('slug')->unique(); // e.g., "protego", "wheel2web"
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accounts');
+        Schema::dropIfExists('applications');
     }
 };

@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\ApplicationEnum;
 use App\Models\Traits\HasUuids;
 use App\Observers\AccountObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -20,18 +18,6 @@ class Account extends Model
     use HasUuids;
     use SoftDeletes;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'applications' => AsEnumCollection::of(ApplicationEnum::class),
-        ];
-    }
-
     public function applicationPayload(): array
     {
         return $this->only([
@@ -42,9 +28,14 @@ class Account extends Model
         ]);
     }
 
-    public function getApplications(): array
+//    public function applicationEnvironments(): BelongsToMany
+//    {
+//        return $this->belongsToMany(ApplicationEnvironment::class)->withTimestamps();
+//    }
+
+    public function applications(): BelongsToMany
     {
-        return $this->applications->toArray();
+        return $this->belongsToMany(Application::class)->withTimestamps();
     }
 
     public function users(): BelongsToMany

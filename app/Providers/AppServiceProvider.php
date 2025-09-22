@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Enums\ApplicationEnum;
+use App\Models\ApplicationEnvironment;
 use App\Models\Client;
 use App\Models\User;
 use Carbon\CarbonInterval;
@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
 
         Relation::enforceMorphMap([
             'user' => User::class,
+            'application_environment' => ApplicationEnvironment::class,
         ]);
 
         Str::macro('shortName', function (string $string) {
@@ -40,12 +41,13 @@ class AppServiceProvider extends ServiceProvider
 
         Passport::tokensExpireIn(CarbonInterval::minutes(60));
 
-        Passport::tokensCan(
-            collect(ApplicationEnum::cases())
-                ->mapWithKeys(fn (ApplicationEnum $application) => [
-                    "application:{$application->value}" => "Access data for {$application->getLabel()}"]
-                )
-                ->toArray()
-        );
+        //        Passport::tokensCan(
+        //            Application::where('is_active', true)
+        //                ->get()
+        //                ->mapWithKeys(fn (Application $application) => [
+        //                    "application:{$application->slug}" => "Access data for {$application->name}"
+        //                ])
+        //                ->toArray()
+        //        );
     }
 }

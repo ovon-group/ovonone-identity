@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\ApplicationEnum;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Passport\Client as PassportClient;
 
 class Client extends PassportClient
@@ -23,6 +22,18 @@ class Client extends PassportClient
         // This override prevents applications from being authorised if
         // the user does not belong to an account with access to it
 
-        return $user->canAccessApplication(ApplicationEnum::from($this->name));
+        // Get the application environment for this client
+        $appEnvironment = $this->owner;
+        if (!$appEnvironment) {
+            return false;
+        }
+
+        // Check if user can access the application
+        return $user->canAccessApplication($appEnvironment->application);
+    }
+
+    public function applicationEnvironment(): BelongsTo
+    {
+        return $this->belongsTo(ApplicationEnvironment::class, 'id', 'client_id');
     }
 }

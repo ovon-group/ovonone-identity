@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ApplicationEnum;
 use App\Models\Client;
 use Illuminate\Database\Seeder;
 
@@ -18,7 +17,7 @@ class ClientSeeder extends Seeder
                 'id' => '01995203-fb59-7008-967c-6864f411199c',
                 'owner_type' => null,
                 'owner_id' => null,
-                'name' => ApplicationEnum::Protego,
+                'name' => 'protego',
                 'secret' => '$2y$12$dzw0AYKIBPQG7tAsOTpZNekkC1gmRHheGbJX2i6Z63KotLvaa18t6',
                 'provider' => null,
                 'redirect_uris' => ["https://dealer.protegoautocare.test/authenticate"],
@@ -30,7 +29,7 @@ class ClientSeeder extends Seeder
                 'id' => '019956da-4791-711a-a92d-f19f3af37582',
                 'owner_type' => null,
                 'owner_id' => null,
-                'name' => ApplicationEnum::Wheel2Web,
+                'name' => 'wheel2web',
                 'secret' => '$2y$12$ixf6FGxMEC2GSamYe00JMOqB/rMdasiaqEDRQHdseTCOaFUxOB9Tu',
                 'provider' => null,
                 'redirect_uris' => ["https://wheel2web.test/authenticate"],

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Accounts;
 
-use App\Enums\ApplicationEnum;
+use App\Models\Application;
 use App\Filament\Resources\Accounts\Pages\CreateAccount;
 use App\Filament\Resources\Accounts\Pages\EditAccount;
 use App\Filament\Resources\Accounts\Pages\ListAccounts;
@@ -74,7 +74,7 @@ class AccountResource extends Resource
                                     ])
                                     ->imageEditor(),
                                 CheckboxList::make('applications')
-                                    ->options(ApplicationEnum::class),
+                                    ->relationship('applications', 'name'),
                             ]),
 
                     ]),
@@ -93,7 +93,7 @@ class AccountResource extends Resource
                 TextColumn::make('short_name')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('applications')
+                TextColumn::make('applications.name')
                     ->badge(),
                 TextColumn::make('created_at')
                     ->dateTime()

@@ -4,7 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Enums\ApplicationEnum;
 use App\Models\Traits\HasUuids;
 use App\Observers\UserObserver;
 use Filament\Models\Contracts\FilamentUser;
@@ -17,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\HasApiTokens;
 use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
@@ -78,7 +78,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
         return $this->name;
     }
 
-    public function applicationPayload($application)
+    public function applicationPayload(ApplicationEnvironment $applicationEnvironment): array
     {
         return [
             'uuid' => $this->uuid,
@@ -86,31 +86,45 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
             'email' => $this->email,
             'mobile' => $this->mobile,
             'is_internal' => $this->is_internal,
-            'accounts' => $this->accounts()->whereJsonContains('applications', $application)->pluck('uuid'),
-            'roles' => $this->roles()->where('app', $application)->pluck('name'),
+            'accounts' => $this->accounts()->whereHas('applications', function($query) use ($applicationEnvironment) {
+                $query->where('applications.id', $applicationEnvironment->application_id);
+            })->pluck('uuid'),
+            'roles' => $this->roles()->where('application_environment_id', $applicationEnvironment->getKey())->pluck('name'),
             'deleted_at' => $this->deleted_at,
         ];
     }
 
-    public function getApplications(): array
+    public function getApplications(): Collection
     {
         if ($this->is_internal) {
-            return ApplicationEnum::cases();
+            return Application::all();
         }
 
         return $this->accounts()
+            ->with('applications')
+            ->get()
             ->pluck('applications')
             ->flatten()
-            ->unique()
-            ->all();
+            ->unique('id')
+            ->values();
     }
 
-    public function canAccessApplication(ApplicationEnum $application): bool
+    public function canAccessApplication($application): bool
     {
         if ($this->is_internal) {
             return true;
         }
 
+        // Handle both Application model and ApplicationEnum for backward compatibility during migration
+        if ($application instanceof Application) {
+            return $this->accounts()
+                ->whereHas('applications', function($query) use ($application) {
+                    $query->where('applications.id', $application->id);
+                })
+                ->exists();
+        }
+
+        // Fallback for ApplicationEnum during migration
         return $this->accounts()
             ->whereJsonContains('applications', $application)
             ->exists();
@@ -123,7 +137,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
     {
         $oneTimePassword = $this->createOneTimePassword();
         $this->notify(new \App\Notifications\OneTimePasswordNotification($oneTimePassword, 'mail'));
-        
+
         return $this;
     }
 
@@ -135,10 +149,10 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
         if (!$this->mobile) {
             throw new \Exception('User does not have a mobile number');
         }
-        
+
         $oneTimePassword = $this->createOneTimePassword();
         $this->notify(new \App\Notifications\OneTimePasswordNotification($oneTimePassword, 'sms'));
-        
+
         return $this;
     }
 

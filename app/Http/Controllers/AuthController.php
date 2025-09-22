@@ -11,8 +11,8 @@ class AuthController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $application = $user->token()->client->name;
+        $applicationEnvironment = $user->token()->client->owner;
 
-        return $user->applicationPayload($application);
+        return $user->applicationPayload($applicationEnvironment);
     }
 }

@@ -23,12 +23,12 @@ return new class extends Migration
         Schema::create($tableNames['permissions'], static function (Blueprint $table) {
             // $table->engine('InnoDB');
             $table->bigIncrements('id'); // permission id
-            $table->string('app');
+            $table->foreignId('application_environment_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('guard_name');
             $table->timestamps();
 
-            $table->unique(['app', 'name', 'guard_name']);
+            $table->unique(['application_environment_id', 'name', 'guard_name']);
         });
 
         Schema::create($tableNames['roles'], static function (Blueprint $table) use ($teams, $columnNames) {
@@ -38,15 +38,15 @@ return new class extends Migration
                 $table->unsignedBigInteger($columnNames['team_foreign_key'])->nullable();
                 $table->index($columnNames['team_foreign_key'], 'roles_team_foreign_key_index');
             }
-            $table->string('app');
+            $table->foreignId('application_environment_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('guard_name');
             $table->boolean('is_internal')->default(false);
             $table->timestamps();
             if ($teams || config('permission.testing')) {
-                $table->unique([$columnNames['team_foreign_key'], 'app', 'name', 'guard_name']);
+                $table->unique([$columnNames['team_foreign_key'], 'application_environment_id', 'name', 'guard_name']);
             } else {
-                $table->unique(['app', 'name', 'guard_name']);
+                $table->unique(['application_environment_id', 'name', 'guard_name']);
             }
         });
 

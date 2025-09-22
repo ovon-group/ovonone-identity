@@ -2,20 +2,23 @@
 
 namespace App\Models;
 
-use App\Enums\ApplicationEnum;
 use Filament\Models\Contracts\HasName;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Role extends \Spatie\Permission\Models\Role implements HasName
 {
-    protected function casts(): array
+    public function applicationEnvironment(): BelongsTo
     {
-        return [
-            'app' => ApplicationEnum::class,
-        ];
+        return $this->belongsTo(ApplicationEnvironment::class);
     }
 
     public function getFilamentName(): string
     {
-        return $this->app->getLabel().': '.$this->name;
+        return sprintf(
+            '%s %s: %s',
+            $this->applicationEnvironment->application->name,
+            $this->applicationEnvironment->name,
+            $this->name
+        );
     }
 }

@@ -2,17 +2,17 @@
 
 namespace App\Services;
 
-use App\Enums\ApplicationEnum;
 use App\Models\Account;
+use App\Models\Application;
 use App\Models\User;
 use Closure;
 use Illuminate\Support\Facades\Http;
 
 class ApplicationService
 {
-    protected ?ApplicationEnum $application = null;
+    protected ?Application $application = null;
 
-    public function for(ApplicationEnum $application)
+    public function for(Application $application)
     {
         $this->application = $application;
 
@@ -23,7 +23,7 @@ class ApplicationService
     {
         $this->forAllApplications(
             $user->getApplications(),
-            function (ApplicationEnum $application) use ($user) {
+            function (Application $application) use ($user) {
                 $this->for($application)
                     ->postRequest(
                         'users',
@@ -36,8 +36,8 @@ class ApplicationService
     public function pushAccount(Account $account)
     {
         $this->forAllApplications(
-            $account->getApplications(),
-            function (ApplicationEnum $application) use ($account) {
+            $account->applications,
+            function (Application $application) use ($account) {
                 $this->for($application)
                     ->postRequest(
                         'accounts',
@@ -49,7 +49,14 @@ class ApplicationService
 
     private function postRequest(string $url, array $payload)
     {
-        $response = Http::baseUrl($this->application->getUrl().'/api')
+        // Get the production URL for this application
+        $baseUrl = $this->application->getProductionUrl();
+
+        if (!$baseUrl) {
+            throw new \Exception("No production URL found for application: {$this->application->name}");
+        }
+
+        $response = Http::baseUrl($baseUrl.'/api')
             ->acceptJson()
             ->put($url, $payload);
 

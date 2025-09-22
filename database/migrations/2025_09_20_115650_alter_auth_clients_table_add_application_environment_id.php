@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('accounts', function (Blueprint $table) {
-            $table->softDeletes();
+        Schema::table('oauth_clients', function (Blueprint $table) {
+           $table->foreignId('application_environment_id')->after('id')->nullable()->constrained()->cascadeOnDelete();
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('accounts', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+        Schema::table('oauth_clients', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('application_environment_id');
         });
     }
 };

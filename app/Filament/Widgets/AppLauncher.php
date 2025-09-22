@@ -2,7 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\ApplicationEnum;
+use App\Models\Application;
+use App\Models\ApplicationEnvironment;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,17 +14,12 @@ class AppLauncher extends Widget
     public function getViewData(): array
     {
         return [
-            'applications' => $this->getApplications(),
+            'applications' => Auth::user()->getApplications(),
         ];
     }
 
-    public function getUrl(ApplicationEnum $application): string
+    public function getUrl(ApplicationEnvironment $applicationEnvironment): string
     {
-        return $application->getUrl() . '?user=' . Auth::user()->uuid;
-    }
-
-    protected function getApplications(): array
-    {
-        return Auth::user()->getApplications();
+        return $applicationEnvironment->url . '?user=' . Auth::user()->uuid;
     }
 }
