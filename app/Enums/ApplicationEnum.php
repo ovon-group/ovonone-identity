@@ -31,4 +31,28 @@ enum ApplicationEnum: string implements HasLabel
             },
         };
     }
+
+    public function getDescription(): string
+    {
+        return match ($this) {
+            self::Protego => __('Warranty, national service plans and breakdown recovery solutions'),
+            self::Wheel2Web => __('Dealership prep tool to shorten time to market for your stock'),
+        };
+    }
+
+    public function getIcon(): string
+    {
+        return match ($this) {
+            self::Protego => 'heroicon-o-wrench-screwdriver',
+            self::Wheel2Web => 'heroicon-o-cog-6-tooth',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::Protego => 'primary',
+            self::Wheel2Web => 'success',
+        };
+    }
 }
