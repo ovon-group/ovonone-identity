@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 class AppLauncher extends Widget
 {
     protected string $view = 'filament.widgets.app-launcher';
+    
+    protected int | string | array $columnSpan = 'full';
 
     public function getViewData(): array
     {
@@ -24,6 +26,15 @@ class AppLauncher extends Widget
 
     protected function getApplications(): array
     {
-        return Auth::user()->getApplications();
+        $user = Auth::user();
+        
+        return collect(ApplicationEnum::cases())
+            ->map(function (ApplicationEnum $application) use ($user) {
+                return [
+                    'application' => $application,
+                    'canAccess' => $user->canAccessApplication($application),
+                ];
+            })
+            ->toArray();
     }
 }
