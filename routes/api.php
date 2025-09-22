@@ -20,7 +20,6 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         $application = ApplicationEnum::from(auth('api')->client()->name);
 
         $validData = $request->validate([
-            'application' => Rule::enum(ApplicationEnum::class),
             'accounts' => 'array',
             'accounts.*.name' => 'required|string',
             'accounts.*.short_name' => 'nullable|string',
@@ -64,24 +63,35 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         ]);
 
         $users = Model::withoutEvents(fn () => collect($request->users)->map(function ($userData) {
+            $userDataToUpdate = Arr::only($userData, [
+                'name',
+                'email',
+                'mobile',
+                'is_internal',
+                'email_verified_at',
+                'password',
+                'deleted_at',
+            ]);
+
             $user = User::query()
                 ->withTrashed()
-                ->updateOrCreate(
+                ->firstOrCreate(
                     isset($userData['email']) && $userData['email']
                         ? ['email' => $userData['email']]
                         : array_filter(Arr::only($userData, [
                             'name',
                             'mobile',
                         ])),
-                    Arr::only($userData, [
-                        'name',
-                        'email',
-                        'mobile',
-                        'is_internal',
-                        'email_verified_at',
-                        'password',
-                        'deleted_at',
-                    ]));
+                    $userDataToUpdate);
+
+            if ($user->wasRecentlyCreated === false) {
+                // do not update existing columns unless they are null
+                foreach($userDataToUpdate as $key => $value) {
+                    $user->{$key} = $user->{$key} ?: $value;
+                }
+            }
+
+            $user->save();
 
             $user->syncRoles($userData['roles'] ?? []);
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
