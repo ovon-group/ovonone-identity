@@ -54,7 +54,7 @@ class ApplicationService
             ->put($url, $payload);
 
         if ($response->failed()) {
-            dd($response->getBody()->getContents());
+            dd($response->json());
         }
     }
 

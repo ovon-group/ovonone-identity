@@ -87,7 +87,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
             'mobile' => $this->mobile,
             'is_internal' => $this->is_internal,
             'accounts' => $this->accounts()->whereJsonContains('applications', $application)->pluck('uuid'),
-            'roles' => $this->roles()->where('app', $application)->pluck('name'),
+            'roles' => $this->roles()->where('app', $application)->pluck('uuid'),
             'deleted_at' => $this->deleted_at,
         ];
     }
@@ -123,7 +123,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
     {
         $oneTimePassword = $this->createOneTimePassword();
         $this->notify(new \App\Notifications\OneTimePasswordNotification($oneTimePassword, 'mail'));
-        
+
         return $this;
     }
 
@@ -135,10 +135,10 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
         if (!$this->mobile) {
             throw new \Exception('User does not have a mobile number');
         }
-        
+
         $oneTimePassword = $this->createOneTimePassword();
         $this->notify(new \App\Notifications\OneTimePasswordNotification($oneTimePassword, 'sms'));
-        
+
         return $this;
     }
 

@@ -92,27 +92,30 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                 $user->save();
             }
 
-            $user->save();
+            $user->syncRoles(Role::where('uuid', $userData['roles'])->get());
 
-            $user->syncRoles($userData['roles'] ?? []);
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
 
             return $user->only(['uuid', 'email', 'mobile', 'name']);
         }));
+
+        app()->make(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
         return [
             'users' => $users,
         ];
     });
 
-    Route::post('/roles', function (Request $request) {
+    Route::post('/roles', action: function (Request $request) {
         $application = ApplicationEnum::from(auth('api')->client()->name);
 
         $validData = $request->validate([
             'roles' => 'array',
+            'roles.*.uuid' => 'required|uuid',
             'roles.*.name' => 'required|string',
             'roles.*.guard_name' => 'required|string',
             'roles.*.is_internal' => 'required|boolean',
+            'roles.*.permissions.*.uuid' => 'required|uuid',
             'roles.*.permissions.*.name' => 'required|string',
             'roles.*.permissions.*.guard_name' => 'required|string',
         ]);
@@ -127,15 +130,22 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         Permission::upsert(
             $allPermissions->map(fn ($item) => [
                 'app' => $application,
+                'uuid' => $item['uuid'],
                 'name' => $item['name'],
                 'guard_name' => $item['guard_name'],
             ])->toArray(),
-            ['app', 'name', 'guard_name'],
+            ['uuid'],
         );
 
+        $rolesDeleted = Role::where('app', $application)
+                            ->whereNotIn('uuid', collect($request->roles)->pluck('uuid'))
+                            ->delete();
+
         foreach ($request->roles as $roleData) {
+            /** @var \App\Models\Role $role */
             $role = Role::updateOrCreate([
                 'app' => $application,
+                'uuid' => $roleData['uuid'],
                 'name' => $roleData['name'],
             ], [
                 'guard_name' => $roleData['guard_name'],
@@ -143,10 +153,6 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             ]);
             $role->syncPermissions(collect($roleData['permissions'])->pluck('name'));
         }
-
-        $rolesDeleted = Role::where('app', $application)
-            ->whereNotIn('name', collect($request->roles)->pluck('name'))
-            ->delete();
 
         $deleted = Permission::doesntHave('roles')->delete();
 
