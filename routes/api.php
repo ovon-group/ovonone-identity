@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Validation\Rule;
 use Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -21,17 +20,25 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
         $validData = $request->validate([
             'accounts' => 'array',
+            'accounts.*.uuid' => 'nullable|uuid',
             'accounts.*.name' => 'required|string',
             'accounts.*.short_name' => 'nullable|string',
             'accounts.*.deleted_at' => 'nullable|date',
         ]);
 
-        $mappedAccounts = Model::withoutEvents(fn() => collect($validData['accounts'])
-            ->map(function ($accountData) use ($validData, $application) {
+        $mappedAccounts = Model::withoutEvents(fn () => collect($validData['accounts'])
+            ->map(function ($accountData) use ($application) {
+                if (!$accountData['uuid']) {
+                    unset($accountData['uuid']);
+                }
+
                 $account = Account::query()
                     ->withTrashed()
                     ->updateOrCreate(
-                        ['name' => $accountData['name']],
+                        match (true) {
+                            isset($accountData['uuid']) => Arr::only($accountData, 'uuid'),
+                            default => Arr::only($accountData, 'name'),
+                        },
                         $accountData
                     );
 
@@ -51,8 +58,9 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
     });
 
     Route::post('users', function (Request $request) {
-        $request->validate([
+        $validData = $request->validate([
             'users' => 'array',
+            'users.*.uuid' => 'nullable|uuid',
             'users.*.name' => 'required|string',
             'users.*.email' => 'nullable|email',
             'users.*.mobile' => 'nullable|string',
@@ -60,10 +68,19 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             'users.*.email_verified_at' => 'nullable|date',
             'users.*.deleted_at' => 'nullable|date',
             'users.*.password' => 'nullable',
+            'users.*.roles' => 'array',
+            'users.*.roles.*' => 'uuid',
+            'users.*.accounts' => 'array',
+            'users.*.accounts.*' => 'uuid',
         ]);
 
-        $users = Model::withoutEvents(fn () => collect($request->users)->map(function ($userData) {
+        $users = Model::withoutEvents(fn () => collect($validData['users'])->map(function ($userData) {
+            if (!$userData['uuid']) {
+                unset($userData['uuid']);
+            }
+
             $userDataToUpdate = Arr::only($userData, [
+                'uuid',
                 'name',
                 'email',
                 'mobile',
@@ -76,21 +93,16 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             $user = User::query()
                 ->withTrashed()
                 ->firstOrCreate(
-                    isset($userData['email']) && $userData['email']
-                        ? ['email' => $userData['email']]
-                        : array_filter(Arr::only($userData, [
-                            'name',
-                            'mobile',
-                        ])),
-                    $userDataToUpdate);
+                    match (true) {
+                        isset($userData['uuid']) => Arr::only($userData, ['uuid']),
+                        isset($userData['email']) => Arr::only($userData, ['email']),
+                        default => Arr::only($userData, ['name', 'mobile']),
+                    }, $userDataToUpdate);
 
-            if ($user->wasRecentlyCreated === false) {
-                // do not update existing columns unless they are null
-                foreach($userDataToUpdate as $key => $value) {
-                    $user->{$key} = $user->{$key} ?: $value;
-                }
-                $user->save();
+            foreach ($userDataToUpdate as $key => $value) {
+                $user->{$key} = $user->{$key} ?: $value;
             }
+            $user->save();
 
             $user->syncRoles(Role::where('uuid', $userData['roles'])->get());
 
@@ -138,8 +150,8 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         );
 
         $rolesDeleted = Role::where('app', $application)
-                            ->whereNotIn('uuid', collect($request->roles)->pluck('uuid'))
-                            ->delete();
+            ->whereNotIn('uuid', collect($request->roles)->pluck('uuid'))
+            ->delete();
 
         foreach ($request->roles as $roleData) {
             /** @var \App\Models\Role $role */
