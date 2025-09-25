@@ -62,15 +62,11 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
-
-        return $this->is_internal;
     }
 
     public function canImpersonate(): bool
     {
-        return true; // TODO
-
-        return $this->hasPermissionTo('users.impersonate');
+        return true;
     }
 
     public function getFilamentName(): string
