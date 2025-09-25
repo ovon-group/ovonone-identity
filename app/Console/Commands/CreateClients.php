@@ -29,17 +29,17 @@ class CreateClients extends Command
     public function handle(ClientRepository $clientRepository): void
     {
         foreach (ApplicationEnum::cases() as $application) {
-            $existingClient = Passport::client()->newQuery()->where('name', $application)->exists();
+            $existingClient = Passport::client()->newQuery()->where('name', $application->value)->exists();
 
             if ($existingClient && ! $this->option('force')) {
                 $this->components->warn("Existing client found for {$application->getLabel()}, no action taken.");
                 continue;
             }
 
-            Passport::client()->newQuery()->where('name', $application)->delete();
+            Passport::client()->newQuery()->where('name', $application->value)->delete();
 
             $client = $clientRepository->createAuthorizationCodeGrantClient(
-                name: $application->getLabel(),
+                name: $application->value,
                 redirectUris: [$application->getUrl()],
             );
             $client->grant_types = [
@@ -51,7 +51,7 @@ class CreateClients extends Command
 
             $this->components->info('New client created successfully.');
 
-            $this->components->twoColumnDetail('Application name', $client->name);
+            $this->components->twoColumnDetail('Client name', $client->name);
             $this->components->twoColumnDetail('Client ID', $client->getKey());
 
             if ($client->confidential()) {
