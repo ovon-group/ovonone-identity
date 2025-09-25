@@ -43,7 +43,7 @@ class CreateClients extends Command
                 redirectUris: [$application->getUrl()],
             );
             $client->grant_types = [
-                ...$client->grantTypes,
+                ...$client->grant_types,
                 'client_credentials',
             ];
             $client->webhook_secret = bin2hex(random_bytes(20));

@@ -26,11 +26,11 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
         return match (app()->environment()) {
             'production' => match ($this) {
                 self::Protego => 'https://dealer.protegoautocare.com',
-                self::Wheel2Web => 'https://wheel2web.com',
+                self::Wheel2Web => 'https://app.wheel2web.com',
             },
             'local' => match ($this) {
                 self::Protego => 'https://dealer.protegoautocare.test',
-                self::Wheel2Web => 'https://app.wheel2web.test',
+                self::Wheel2Web => 'https://wheel2web.test',
             },
         };
     }
