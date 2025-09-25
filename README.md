@@ -1,61 +1,372 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ovon Group Identity Provider (IDP)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A first-party Single Sign-On (SSO) Identity Provider for Ovon Group software products, featuring an integrated application launcher for seamless user experience across multiple applications.
 
-## About Laravel
+## Overview
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This Laravel-based identity provider serves as the central authentication and authorization system for Ovon Group's software ecosystem. It provides:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Single Sign-On (SSO)** authentication for multiple applications
+- **Application Launcher** widget for easy access to authorized applications
+- **Role-based Access Control (RBAC)** with application-specific permissions
+- **Multi-factor Authentication (MFA)** support via OTP and Passkeys
+- **Account Management** with application-specific access controls
+- **API Integration** for client applications via OAuth 2.0
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Supported Applications
 
-## Learning Laravel
+Currently supports the following Ovon Group applications:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Protego** - Warranty, national service plans and breakdown recovery solutions
+- **Wheel2Web** - Dealership prep tool to shorten time to market for your stock
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Architecture
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Core Components
 
-## Laravel Sponsors
+- **Authentication System**: Laravel Passport OAuth 2.0 implementation
+- **User Management**: Multi-tenant user system with account-based access control
+- **Application Registry**: Centralized application configuration and URL management
+- **Permission System**: Spatie Laravel Permission with application-scoped roles
+- **Admin Interface**: Filament-based administration panel
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Key Models
 
-### Premium Partners
+- `User`: Core user entity with UUID, multi-factor auth, and application access
+- `Account`: Multi-tenant account system with application associations
+- `Client`: OAuth 2.0 client applications
+- `Role` & `Permission`: Application-scoped authorization system
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Developer Onboarding
+
+### Prerequisites
+
+- PHP 8.4 or higher
+- Composer
+- Node.js and npm
+- MySQL/PostgreSQL database
+- Redis (for queues and caching)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd identity
+   ```
+
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Install Node.js dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Environment setup**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+5. **Database setup**
+   ```bash
+   php artisan migrate
+   php artisan db:seed
+   ```
+
+6. **OAuth setup**
+   ```bash
+   php artisan passport:install
+   ```
+
+7. **Build assets**
+   ```bash
+   npm run build
+   ```
+
+### Development Environment
+
+For local development, use the provided development script:
+
+```bash
+composer run dev
+```
+
+This command runs:
+- Laravel development server
+- Queue worker
+- Log monitoring (Pail)
+- Vite asset compilation
+
+## Client Application Integration
+
+### OvonOne SSO Laravel SDK
+
+Client applications integrate with this IDP using the [OvonOne SSO Laravel SDK](https://github.com/ovon-group/ovonone-sso-laravel). This package provides:
+
+- Seamless SSO authentication flow
+- User session management
+- Automatic token refresh
+- Application-specific user data synchronization
+
+### SDK Installation
+
+In your client application:
+
+```bash
+composer require ovon-group/ovonone-sso-laravel
+```
+
+### SDK Configuration
+
+```php
+// config/ovonone-sso.php
+return [
+    'models' => [
+        'user' => App\Models\User::class,
+        'account' => App\Models\Account::class,
+    ],
+
+    'oauth_middleware' => ['web', 'guest'],
+
+    'roles' => [
+//        [
+//            'name' => 'Admin',
+//            'is_internal' => true,
+//            'permissions' => [
+//                'accounts.manage',
+//                '...',
+//            ],
+//        ],
+    ],
+];
+```
+
+## API Documentation
+
+### Authentication Endpoints
+
+#### User Authentication
+```http
+GET /api/user
+Authorization: Bearer {access_token}
+```
+
+Returns authenticated user information including:
+- User UUID, name, email
+- Associated accounts
+- Application-specific roles
+- Access permissions
+
+#### Account Synchronization
+```http
+POST /api/accounts
+Authorization: Bearer {client_credentials_token}
+Content-Type: application/json
+
+{
+  "accounts": [
+    {
+      "uuid": "account-uuid",
+      "name": "Account Name",
+      "short_name": "Short Name",
+      "deleted_at": null
+    }
+  ]
+}
+```
+
+#### User Synchronization
+```http
+POST /api/users
+Authorization: Bearer {client_credentials_token}
+Content-Type: application/json
+
+{
+  "users": [
+    {
+      "uuid": "user-uuid",
+      "name": "User Name",
+      "email": "user@example.com",
+      "mobile": "+44123456789",
+      "is_internal": false,
+      "roles": ["role-uuid-1", "role-uuid-2"],
+      "accounts": ["account-uuid-1"]
+    }
+  ]
+}
+```
+
+#### Role and Permission Synchronization
+```http
+POST /api/roles
+Authorization: Bearer {client_credentials_token}
+Content-Type: application/json
+
+{
+  "roles": [
+    {
+      "uuid": "role-uuid",
+      "name": "role-name",
+      "guard_name": "web",
+      "is_internal": false,
+      "permissions": [
+        {
+          "uuid": "permission-uuid",
+          "name": "permission-name",
+          "guard_name": "web"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Application Management
+
+### Adding New Applications
+
+1. **Update ApplicationEnum**
+   ```php
+   // app/Enums/ApplicationEnum.php
+   case NewApp = 'newapp';
+   ```
+
+2. **Configure application details**
+   ```php
+   public function getLabel(): string
+   {
+       return match ($this) {
+           // ... existing cases
+           self::NewApp => __('New Application'),
+       };
+   }
+   
+   public function getUrl(): string
+   {
+       return match (app()->environment()) {
+           'production' => match ($this) {
+               // ... existing cases
+               self::NewApp => 'https://newapp.ovongroup.com',
+           },
+           'local' => match ($this) {
+               // ... existing cases
+               self::NewApp => 'https://newapp.test',
+           },
+       };
+   }
+   ```
+
+3. **Create OAuth Client**
+   ```bash
+   php artisan passport:client --name="New Application"
+   ```
+
+4. **Update client application**
+   - Install the OvonOne SSO Laravel SDK
+   - Configure OAuth credentials
+   - Implement SSO authentication flow
+
+### Application Launcher
+
+The application launcher widget automatically displays authorized applications for each user. It:
+
+- Checks user access permissions per application
+- Generates application-specific URLs with user context
+- Provides visual indicators for application status
+- Supports custom icons and branding per application
+
+## Security Features
+
+### Multi-Factor Authentication
+
+- **One-Time Passwords (OTP)**: Email and SMS delivery
+- **Passkeys**: WebAuthn/FIDO2 support for passwordless authentication
+- **Traditional Passwords**: Fallback authentication method
+
+### Access Control
+
+- **Account-based Access**: Users can only access applications associated with their accounts
+- **Role-based Permissions**: Application-specific roles and permissions
+- **Internal User Override**: Internal users have access to all applications
+- **Soft Deletion**: Support for user and account deactivation
+
+### OAuth 2.0 Security
+
+- **Client Credentials**: Secure API access for application synchronization
+- **Authorization Code Flow**: Standard OAuth 2.0 for user authentication
+- **Token Expiration**: Configurable access token lifetimes
+- **Scope-based Access**: Fine-grained permission control
+
+## Testing
+
+Run the test suite:
+
+```bash
+composer run test
+```
+
+The test suite includes:
+- Feature tests for authentication flows
+- Unit tests for user and account management
+- Integration tests for API endpoints
+- Application filtering and access control tests
+
+## Deployment
+
+### Production Requirements
+
+- PHP 8.4+
+- MySQL/PostgreSQL
+- Redis
+- SSL/TLS certificates
+- Environment-specific configuration
+
+### Deployment Checklist
+
+1. **Environment Configuration**
+   - Set `APP_ENV=production`
+   - Configure production database
+   - Set up Redis for queues and caching
+   - Configure mail and SMS services
+
+2. **OAuth Setup**
+   - Generate production OAuth keys
+   - Configure client applications
+   - Set up redirect URIs
+
+3. **Asset Compilation**
+   ```bash
+   npm run build
+   ```
+
+4. **Database Migration**
+   ```bash
+   php artisan migrate --force
+   ```
+
+5. **Queue Configuration**
+   - Set up queue workers
+   - Configure job processing
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
 
-## Code of Conduct
+## Support
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+For technical support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the OvonOne SSO Laravel SDK documentation
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is proprietary software owned by Ovon Group.
