@@ -24,6 +24,7 @@ class ClientSeeder extends Seeder
                 'redirect_uris' => ["https://dealer.protegoautocare.test/authenticate"],
                 'grant_types' => ["authorization_code", "refresh_token", "client_credentials"],
                 'revoked' => 0,
+                'webhook_secret' => 'T4st5wwRbUJjpA99BrBg8W5zBMAVx8zT8hn4+oyvieY=',
                 // Client secret = FlZCdI5zxMh0Ey0TnE5oGW8NcYSS5pUkVugCae1G
             ],
             [
@@ -36,12 +37,13 @@ class ClientSeeder extends Seeder
                 'redirect_uris' => ["https://wheel2web.test/authenticate"],
                 'grant_types' => ["authorization_code", "refresh_token", "client_credentials"],
                 'revoked' => 0,
+                'webhook_secret' => 'WgK9IBRjpibeJbq1Clyv5StoxUAX1VFBn1lKmFx3T+I=',
                 // Client secret = Xk57z0maXfgD8ys1kMTU94VcbZ9I5ihNvMuP897B
             ],
         ];
 
         foreach ($rows as $row) {
-            Client::firstOrCreate(['id' => $row['id']], $row);
+            Client::updateOrCreate(['id' => $row['id']], $row);
         }
     }
 }

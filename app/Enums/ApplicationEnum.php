@@ -2,6 +2,7 @@
 
 namespace App\Enums;
 
+use App\Models\Client;
 use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasColor;
@@ -56,5 +57,10 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
             self::Protego => 'primary',
             self::Wheel2Web => 'success',
         };
+    }
+
+    public function getClient(): ?Client
+    {
+        return Client::where('name', $this->value)->first();
     }
 }

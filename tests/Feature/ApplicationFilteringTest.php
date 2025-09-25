@@ -5,7 +5,7 @@ use App\Jobs\SyncAccountWithApplications;
 use App\Jobs\SyncUserWithApplications;
 use App\Models\Account;
 use App\Models\User;
-use App\Services\ApplicationService;
+use App\Services\ApplicationService\ApplicationApiService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Laravel\Passport\Client;
@@ -60,7 +60,7 @@ test('it only syncs users to correct applications', function () {
     ];
 
     // Mock the ApplicationService to verify correct applications are called
-    $mockService = Mockery::mock(ApplicationService::class);
+    $mockService = Mockery::mock(ApplicationApiService::class);
     $mockService->shouldReceive('pushUser')
         ->twice()
         ->with(Mockery::on(function ($user) {
@@ -71,8 +71,8 @@ test('it only syncs users to correct applications', function () {
             expect($user->canAccessApplication(ApplicationEnum::Protego))->toBeTrue();
             expect($user->canAccessApplication(ApplicationEnum::Wheel2Web))->toBeTrue();
         });
-    
-    $this->app->instance(ApplicationService::class, $mockService);
+
+    $this->app->instance(ApplicationApiService::class, $mockService);
 
     $response = $this->postJson('/api/users', $userData);
 
@@ -82,7 +82,7 @@ test('it only syncs users to correct applications', function () {
     // Since we're using Bus::fake(), we need to manually execute the jobs
     $dispatchedJobs = Bus::dispatched(SyncUserWithApplications::class);
     foreach ($dispatchedJobs as $job) {
-        $job->handle(app(ApplicationService::class));
+        $job->handle(app(ApplicationApiService::class));
     }
 
     // Verify sync job was dispatched
@@ -112,7 +112,7 @@ test('it only syncs accounts to correct applications', function () {
     ];
 
     // Mock the ApplicationService to verify correct applications are called
-    $mockService = Mockery::mock(ApplicationService::class);
+    $mockService = Mockery::mock(ApplicationApiService::class);
     $mockService->shouldReceive('pushAccount')
         ->twice()
         ->with(Mockery::on(function ($account) {
@@ -124,8 +124,8 @@ test('it only syncs accounts to correct applications', function () {
             expect($applications)->toContain(ApplicationEnum::Protego);
             expect($applications)->not->toContain(ApplicationEnum::Wheel2Web);
         });
-    
-    $this->app->instance(ApplicationService::class, $mockService);
+
+    $this->app->instance(ApplicationApiService::class, $mockService);
 
     $response = $this->postJson('/api/accounts', $accountData);
 
@@ -134,7 +134,7 @@ test('it only syncs accounts to correct applications', function () {
     // Process the queue to execute the dispatched jobs
     $dispatchedJobs = Bus::dispatched(SyncAccountWithApplications::class);
     foreach ($dispatchedJobs as $job) {
-        $job->handle(app(ApplicationService::class));
+        $job->handle(app(ApplicationApiService::class));
     }
 
     // Verify sync job was dispatched

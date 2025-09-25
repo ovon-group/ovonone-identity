@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\User;
-use App\Services\ApplicationService;
+use App\Services\ApplicationService\ApplicationApiService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -19,7 +19,7 @@ class SyncUserWithApplications implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(ApplicationService $applicationService): void
+    public function handle(ApplicationApiService $applicationService): void
     {
         $applicationService->pushUser($this->user);
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\ApplicationService;
 
 use App\Enums\ApplicationEnum;
 use App\Models\Account;
@@ -8,9 +8,13 @@ use App\Models\User;
 use Closure;
 use Illuminate\Support\Facades\Http;
 
-class ApplicationService
+class ApplicationApiService
 {
     protected ?ApplicationEnum $application = null;
+
+    public function __construct(protected WebhookSignatureGenerator $webhookHasher)
+    {
+    }
 
     public function for(ApplicationEnum $application)
     {
@@ -25,7 +29,7 @@ class ApplicationService
             $user->getApplications(),
             function (ApplicationEnum $application) use ($user) {
                 $this->for($application)
-                    ->postRequest(
+                    ->sendPutRequest(
                         'users',
                         ['user' => $user->applicationPayload($this->application)]
                     );
@@ -39,7 +43,7 @@ class ApplicationService
             $account->getApplications(),
             function (ApplicationEnum $application) use ($account) {
                 $this->for($application)
-                    ->postRequest(
+                    ->sendPutRequest(
                         'accounts',
                         ['account' => $account->applicationPayload()]
                     );
@@ -47,15 +51,18 @@ class ApplicationService
         );
     }
 
-    private function postRequest(string $url, array $payload)
+    private function sendPutRequest(string $url, array $payload)
     {
-        $response = Http::baseUrl($this->application->getUrl().'/api')
-            ->acceptJson()
-            ->put($url, $payload);
+        $signature = $this->webhookHasher->generate(
+            params: $payload,
+            secret: $this->application->getClient()->webhook_secret,
+        );
 
-        if ($response->failed()) {
-            dd($response->json());
-        }
+        Http::baseUrl($this->application->getUrl().'/api')
+            ->withHeaders(['X-Signature' => $signature])
+            ->acceptJson()
+            ->throw()
+            ->put($url, $payload);
     }
 
     private function forAllApplications($applications, Closure $callback)
@@ -64,6 +71,9 @@ class ApplicationService
             try {
                 $callback($application);
             } catch (\Throwable $throwable) {
+                if (app()->isLocal()) {
+                    throw $throwable;
+                }
                 report($throwable);
             }
         }
