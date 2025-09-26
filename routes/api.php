@@ -5,6 +5,7 @@ use App\Models\Account;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner;
 use Spatie\Permission\Models\Permission;
@@ -100,11 +101,11 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                     }, $userDataToUpdate);
 
             foreach ($userDataToUpdate as $key => $value) {
-                $user->{$key} = $user->{$key} ?: $value;
+                $user->{$key} = $value;
             }
             $user->save();
 
-            $user->syncRoles(Role::where('uuid', $userData['roles'])->get());
+            $user->syncRoles(Role::whereIn('uuid', Arr::wrap($userData['roles']))->get());
 
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
 
