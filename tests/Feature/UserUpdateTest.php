@@ -200,10 +200,6 @@ test('it can restore soft deleted users via api', function () {
 test('it syncs user roles correctly', function () {
     Bus::fake();
 
-    // Create roles
-    // $adminRole = Role::create(['uuid' => Str::uuid(), 'name' => 'admin', 'guard_name' => 'api', 'app' => 'protego']);
-    // $userRole = Role::create(['uuid' => Str::uuid(), 'name' => 'user', 'guard_name' => 'api', 'app' => 'protego']);
-
     $adminRoleUuid = Str::uuid();
     $userRoleUuid = Str::uuid();
 
