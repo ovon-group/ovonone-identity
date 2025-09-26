@@ -34,7 +34,7 @@ jobs:
                 run: php artisan key:generate
 
             -   name: Generate Passport Keys  
-                run: php artisan passport:install --force -n
+                run: php artisan passport:keys
 
             -   uses: actions/setup-node@v4
                 with:
