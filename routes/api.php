@@ -104,7 +104,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
             }
             $user->save();
 
-            $user->syncRoles(Role::where('uuid', $userData['roles'])->get());
+            $user->syncRoles(Role::whereIn('uuid', $userData['roles'])->get());
 
             $user->accounts()->sync(Account::whereIn('uuid', $userData['accounts'] ?? [])->pluck('id'));
 
