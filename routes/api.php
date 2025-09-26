@@ -100,7 +100,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
                     }, $userDataToUpdate);
 
             foreach ($userDataToUpdate as $key => $value) {
-                $user->{$key} = $user->{$key} ?: $value;
+                $user->{$key} = $value;
             }
             $user->save();
 
