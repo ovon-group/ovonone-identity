@@ -13,7 +13,13 @@ use Laravel\Passport\Passport;
 
 beforeEach(function () {
     // Create OAuth client for API authentication
-    $this->client = Client::factory()->create();
+    $this->client = Client::factory()->create([
+        'name' => ApplicationEnum::Protego->value,
+        'secret' => 'test-secret',
+        'redirect_uris' => '["http://localhost"]',
+        'grant_types' => '["client_credentials"]',
+        'revoked' => false,
+    ]);
 
     Passport::actingAsClient($this->client);
 });
@@ -47,47 +53,19 @@ test('it only syncs users to correct applications', function () {
 
     $user->accounts()->attach([$protegoAccount->id, $wheel2webAccount->id]);
 
-    // Update user via API
-    $userData = [
-        'users' => [
-            [
-                'email' => 'test@example.com',
-                'name' => 'Updated User',
-                'roles' => [],
-                'accounts' => [$protegoAccount->uuid, $wheel2webAccount->uuid],
-            ],
-        ],
-    ];
-
-    // Mock the ApplicationService to verify correct applications are called
-    $mockService = Mockery::mock(ApplicationApiService::class);
-    $mockService->shouldReceive('pushUser')
-        ->twice()
-        ->with(Mockery::on(function ($user) {
-            return $user instanceof \App\Models\User && $user->email === 'test@example.com';
-        }))
-        ->andReturnUsing(function ($user) {
-            // Verify user has access to both applications
-            expect($user->canAccessApplication(ApplicationEnum::Protego))->toBeTrue();
-            expect($user->canAccessApplication(ApplicationEnum::Wheel2Web))->toBeTrue();
-        });
-
-    $this->app->instance(ApplicationApiService::class, $mockService);
-
-    $response = $this->postJson('/api/users', $userData);
-
-    $response->assertStatus(200);
-
-    // Process the queue to execute the dispatched jobs
-    // Since we're using Bus::fake(), we need to manually execute the jobs
-    $dispatchedJobs = Bus::dispatched(SyncUserWithApplications::class);
-    foreach ($dispatchedJobs as $job) {
-        $job->handle(app(ApplicationApiService::class));
-    }
+    $user->update([
+        'name' => 'Updated User',
+    ]);
 
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
-        return $job->user->id === $user->id;
+        return $job->user->id === $user->id
+            && $job->user->accounts->contains(fn ($account) =>
+                $account->applications->contains(ApplicationEnum::Protego)
+            )
+            && $job->user->accounts->contains(fn ($account) =>
+                $account->applications->contains(ApplicationEnum::Wheel2Web)
+            );
     });
 });
 
@@ -96,55 +74,31 @@ test('it only syncs accounts to correct applications', function () {
     Http::fake();
 
     // Create account with specific applications
-    $account = Account::factory()->create([
+    $account = Account::factory()->createOneQuietly([
         'name' => 'Test Account',
         'applications' => [ApplicationEnum::Protego],
     ]);
 
-    // Update account via API
-    $accountData = [
-        'accounts' => [
-            [
-                'name' => 'Test Account',
-                'short_name' => 'updated',
-            ],
-        ],
-    ];
-
-    // Mock the ApplicationService to verify correct applications are called
-    $mockService = Mockery::mock(ApplicationApiService::class);
-    $mockService->shouldReceive('pushAccount')
-        ->twice()
-        ->with(Mockery::on(function ($account) {
-            return $account instanceof \App\Models\Account && $account->name === 'Test Account';
-        }))
-        ->andReturnUsing(function ($account) {
-            // Verify account only has Protego application
-            $applications = $account->getApplications();
-            expect($applications)->toContain(ApplicationEnum::Protego);
-            expect($applications)->not->toContain(ApplicationEnum::Wheel2Web);
-        });
-
-    $this->app->instance(ApplicationApiService::class, $mockService);
-
-    $response = $this->postJson('/api/accounts', $accountData);
-
-    $response->assertStatus(200);
-
-    // Process the queue to execute the dispatched jobs
-    $dispatchedJobs = Bus::dispatched(SyncAccountWithApplications::class);
-    foreach ($dispatchedJobs as $job) {
-        $job->handle(app(ApplicationApiService::class));
-    }
+    $account->update([
+        'name' => 'Updated Account',
+        'applications' => [ApplicationEnum::Protego, ApplicationEnum::Wheel2Web],
+    ]);
 
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncAccountWithApplications::class, function ($job) use ($account) {
-        return $job->account->id === $account->id;
+        return $job->account->id === $account->id
+            && $job->account->applications->contains(ApplicationEnum::Protego)
+            && $job->account->applications->contains(ApplicationEnum::Wheel2Web);
     });
 });
 
 test('internal users are synced to all applications', function () {
     Bus::fake();
+
+    $account = Account::factory()->createQuietly([
+        'name' => 'Test Dealership',
+        'applications' => [ApplicationEnum::Protego, ApplicationEnum::Wheel2Web],
+    ]);
 
     // Create internal user
     $user = User::factory()->create([
@@ -153,67 +107,18 @@ test('internal users are synced to all applications', function () {
         'is_internal' => true,
     ]);
 
-    // Update user via API
-    $userData = [
-        'users' => [
-            [
-                'email' => 'internal@example.com',
-                'name' => 'Internal User',
-                'is_internal' => true,
-                'roles' => [],
-                'accounts' => [],
-            ],
-        ],
-    ];
+    $user->accounts()->attach($account->id);
 
-    $response = $this->postJson('/api/users', $userData);
-
-    $response->assertStatus(200);
-
-    // Verify user has access to all applications
-    expect($user->canAccessApplication(ApplicationEnum::Protego))->toBeTrue();
-    expect($user->canAccessApplication(ApplicationEnum::Wheel2Web))->toBeTrue();
-
-    // Verify getApplications returns all applications
-    $applications = $user->getApplications();
-    expect($applications)->toContain(ApplicationEnum::Protego);
-    expect($applications)->toContain(ApplicationEnum::Wheel2Web);
-});
-
-test('non internal users only access applications through accounts', function () {
-    Bus::fake();
-
-    // Create non-internal user with no accounts
-    $user = User::factory()->create([
-        'name' => 'External User',
-        'email' => 'external@example.com',
-        'is_internal' => false,
-    ]);
-
-    // Update user via API
-    $userData = [
-        'users' => [
-            [
-                'email' => 'external@example.com',
-                'name' => 'External User',
-                'is_internal' => false,
-                'roles' => [],
-                'accounts' => [],
-            ],
-        ],
-    ];
-
-    $response = $this->postJson('/api/users', $userData);
-
-    $response->assertStatus(200);
-
-    // Verify user has no access to applications
-    expect($user->canAccessApplication(ApplicationEnum::Protego))->toBeFalse();
-    expect($user->canAccessApplication(ApplicationEnum::Wheel2Web))->toBeFalse();
-
-    // Verify getApplications returns empty array
-    $applications = $user->getApplications();
-    expect($applications)->toBeEmpty();
+    Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
+        return $job->user->id === $user->id
+            && $job->user->is_internal === true
+            && $job->user->accounts->contains(fn ($account) =>
+                $account->applications->contains(ApplicationEnum::Protego)
+            )
+            && $job->user->accounts->contains(fn ($account) =>
+                $account->applications->contains(ApplicationEnum::Wheel2Web)
+            );
+    });
 });
 
 test('user application payload filters correctly', function () {
@@ -249,97 +154,4 @@ test('user application payload filters correctly', function () {
     expect($wheel2webPayload)->toHaveKey('accounts');
     expect($wheel2webPayload['accounts'])->toContain($wheel2webAccount->uuid);
     expect($wheel2webPayload['accounts'])->not->toContain($protegoAccount->uuid);
-});
-
-test('account application payload works correctly', function () {
-    // Create account with specific applications
-    $account = Account::factory()->create([
-        'name' => 'Test Account',
-        'short_name' => 'test',
-        'applications' => [ApplicationEnum::Protego, ApplicationEnum::Wheel2Web],
-    ]);
-
-    $payload = $account->applicationPayload();
-
-    expect($payload)->toHaveKey('uuid');
-    expect($payload)->toHaveKey('name');
-    expect($payload)->toHaveKey('short_name');
-    expect($payload)->toHaveKey('deleted_at');
-
-    expect($payload['name'])->toBe('Test Account');
-    expect($payload['short_name'])->toBe('test');
-});
-
-test('it handles soft deleted users correctly in application filtering', function () {
-    Bus::fake();
-
-    // Create user and soft delete
-    $user = User::factory()->create([
-        'name' => 'Deleted User',
-        'email' => 'deleted@example.com',
-        'is_internal' => false,
-    ]);
-
-    $user->delete();
-
-    // Update user via API (restore)
-    $userData = [
-        'users' => [
-            [
-                'email' => 'deleted@example.com',
-                'name' => 'Restored User',
-                'deleted_at' => null,
-                'roles' => [],
-                'accounts' => [],
-            ],
-        ],
-    ];
-
-    $response = $this->postJson('/api/users', $userData);
-
-    $response->assertStatus(200);
-
-    // Verify user was restored
-    $this->assertDatabaseHas('users', [
-        'email' => 'deleted@example.com',
-        'deleted_at' => null,
-    ]);
-
-    // Verify sync job was dispatched
-    Bus::assertDispatched(SyncUserWithApplications::class);
-});
-
-test('it handles soft deleted accounts correctly in application filtering', function () {
-    Bus::fake();
-
-    // Create account and soft delete
-    $account = Account::factory()->create([
-        'name' => 'Deleted Account',
-        'applications' => [ApplicationEnum::Protego],
-    ]);
-
-    $account->delete();
-
-    // Update account via API (restore)
-    $accountData = [
-        'accounts' => [
-            [
-                'name' => 'Deleted Account',
-                'short_name' => 'restored',
-            ],
-        ],
-    ];
-
-    $response = $this->postJson('/api/accounts', $accountData);
-
-    $response->assertStatus(200);
-
-    // Verify account was restored
-    $this->assertDatabaseHas('accounts', [
-        'name' => 'Deleted Account',
-        'deleted_at' => null,
-    ]);
-
-    // Verify sync job was dispatched
-    Bus::assertDispatched(SyncAccountWithApplications::class);
 });

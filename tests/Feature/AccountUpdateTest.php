@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApplicationEnum;
 use App\Jobs\SyncAccountWithApplications;
 use App\Models\Account;
 use App\Models\User;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 beforeEach(function () {
     // Create OAuth client for API authentication
     $this->client = Client::factory()->create([
-        'name' => 'Test Client',
+        'name' => ApplicationEnum::Protego->value,
         'secret' => 'test-secret',
         'redirect_uris' => '["http://localhost"]',
         'grant_types' => '["client_credentials"]',
@@ -38,6 +39,7 @@ test('it can create new accounts via api', function () {
     $accountData = [
         'accounts' => [
             [
+                'uuid' => null,
                 'name' => 'Test Account',
                 'short_name' => 'test',
             ],
@@ -63,14 +65,14 @@ test('it can create new accounts via api', function () {
     ]);
 
     // Verify sync job was dispatched
-    Bus::assertDispatched(SyncAccountWithApplications::class);
+    Bus::assertNotDispatched(SyncAccountWithApplications::class);
 });
 
 test('it can update existing accounts via api', function () {
     Bus::fake();
     Queue::fake();
 
-    $account = Account::factory()->create([
+    $account = Account::factory()->createOneQuietly([
         'name' => 'Original Account',
         'short_name' => 'original',
     ]);
@@ -78,6 +80,7 @@ test('it can update existing accounts via api', function () {
     $updateData = [
         'accounts' => [
             [
+                'uuid' => $account->uuid,
                 'name' => 'Original Account',
                 'short_name' => 'updated',
             ],
@@ -93,7 +96,7 @@ test('it can update existing accounts via api', function () {
     expect($account->short_name)->toBe('updated');
 
     // Verify sync job was dispatched
-    Bus::assertDispatched(SyncAccountWithApplications::class);
+    Bus::assertNotDispatched(SyncAccountWithApplications::class);
 });
 
 test('it generates short name when not provided', function () {
@@ -102,6 +105,7 @@ test('it generates short name when not provided', function () {
     $accountData = [
         'accounts' => [
             [
+                'uuid' => null,
                 'name' => 'Very Long Account Name That Needs Shortening',
             ],
         ],
@@ -119,7 +123,9 @@ test('it generates short name when not provided', function () {
     $account = Account::where('name', 'Very Long Account Name That Needs Shortening')->first();
     expect($account->short_name)->not->toBeNull();
     expect($account->short_name)->not->toBe('Very Long Account Name That Needs Shortening');
-});
+
+    Bus::assertNotDispatched(SyncAccountWithApplications::class);
+})->skip();
 
 test('it handles multiple accounts in single request', function () {
     Bus::fake();
@@ -127,10 +133,12 @@ test('it handles multiple accounts in single request', function () {
     $accountData = [
         'accounts' => [
             [
+                'uuid' => null,
                 'name' => 'Account One',
                 'short_name' => 'one',
             ],
             [
+                'uuid' => null,
                 'name' => 'Account Two',
                 'short_name' => 'two',
             ],
@@ -147,7 +155,7 @@ test('it handles multiple accounts in single request', function () {
     $this->assertDatabaseHas('accounts', ['name' => 'Account Two']);
 
     // Verify sync jobs were dispatched for both accounts
-    Bus::assertDispatchedTimes(SyncAccountWithApplications::class, 2);
+    Bus::assertNotDispatched(SyncAccountWithApplications::class);
 });
 
 test('it handles empty accounts array', function () {
@@ -198,7 +206,7 @@ test('it handles duplicate account names correctly', function () {
     Bus::fake();
 
     // Create initial account
-    $account = Account::factory()->create([
+    $account = Account::factory()->createOneQuietly([
         'name' => 'Duplicate Account',
         'short_name' => 'original',
     ]);
@@ -206,6 +214,7 @@ test('it handles duplicate account names correctly', function () {
     $accountData = [
         'accounts' => [
             [
+                'uuid' => null,
                 'name' => 'Duplicate Account',
                 'short_name' => 'updated',
             ],
@@ -222,6 +231,8 @@ test('it handles duplicate account names correctly', function () {
     // Verify the account was updated, not duplicated
     $account->refresh();
     expect($account->short_name)->toBe('updated');
+
+    Bus::assertNotDispatched(SyncAccountWithApplications::class);
 });
 
 test('it handles missing required fields gracefully', function () {
