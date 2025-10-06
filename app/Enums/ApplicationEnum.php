@@ -12,12 +12,14 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
 {
     case Protego = 'protego';
     case Wheel2Web = 'wheel2web';
+    case DealStack = 'dealstack';
 
     public function getLabel(): string|Htmlable|null
     {
         return match ($this) {
             self::Protego => __('Protego'),
             self::Wheel2Web => __('Wheel2Web'),
+            self::DealStack => __('DealStack'),
         };
     }
 
@@ -27,10 +29,12 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
             'production' => match ($this) {
                 self::Protego => 'https://dealer.protegoautocare.com',
                 self::Wheel2Web => 'https://app.wheel2web.com',
+                self::DealStack => 'https://todo',
             },
             'local' => match ($this) {
                 self::Protego => 'https://dealer.protegoautocare.test',
                 self::Wheel2Web => 'https://wheel2web.test',
+                self::DealStack => 'https://dealstack.test',
             },
         };
     }
@@ -40,6 +44,7 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             self::Protego => __('Warranty, national service plans and breakdown recovery solutions'),
             self::Wheel2Web => __('Dealership prep tool to shorten time to market for your stock'),
+            self::DealStack => __('Showroom quoting and compliance solutions'),
         };
     }
 
@@ -48,6 +53,7 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             self::Protego => 'heroicon-o-shield-check',
             self::Wheel2Web => 'solar-wheel-linear',
+            self::DealStack => 'heroicon-o-document-currency-pound',
         };
     }
 
@@ -56,6 +62,7 @@ enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             self::Protego => 'primary',
             self::Wheel2Web => 'success',
+            self::DealStack => 'info',
         };
     }
 
