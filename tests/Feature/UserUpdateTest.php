@@ -1,22 +1,23 @@
 <?php
 
+use App\Enums\ApplicationEnum;
 use App\Jobs\SyncUserWithApplications;
 use App\Models\Account;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Laravel\Passport\Client;
 use Laravel\Passport\Passport;
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create OAuth client for API authentication
     $this->client = Client::factory()->create([
-        'name' => 'Test Client',
+        'name' => ApplicationEnum::Protego->value,
         'secret' => 'test-secret',
         'redirect_uris' => '["http://localhost"]',
         'grant_types' => '["client_credentials"]',
@@ -39,16 +40,17 @@ test('it can create new users via api', function () {
     Queue::fake();
 
     // Create the user role
-    $userRole = Role::create(['name' => 'user', 'guard_name' => 'api', 'app' => 'protego']);
+    $userRoleUuid = Str::uuid();
 
     $userData = [
         'users' => [
             [
+                'uuid' => null,
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
                 'mobile' => '+1234567890',
                 'is_internal' => false,
-                'roles' => ['user'],
+                'roles' => [$userRoleUuid],
                 'accounts' => [],
             ],
         ],
@@ -77,17 +79,16 @@ test('it can create new users via api', function () {
     ]);
 
     // Verify sync job was dispatched
-    Bus::assertDispatched(SyncUserWithApplications::class);
+    Bus::assertNotDispatched(SyncUserWithApplications::class);
 });
 
 test('it can update existing users via api', function () {
     Bus::fake();
     Queue::fake();
 
-    // Create the admin role
-    $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'api', 'app' => 'protego']);
+    $adminRoleUuid = Str::uuid();
 
-    $user = User::factory()->create([
+    $user = User::factory()->createOneQuietly([
         'name' => 'Original Name',
         'email' => 'original@example.com',
         'mobile' => '+1111111111',
@@ -97,11 +98,12 @@ test('it can update existing users via api', function () {
     $updateData = [
         'users' => [
             [
+                'uuid' => $user->uuid,
                 'email' => 'original@example.com',
                 'name' => 'Updated Name',
                 'mobile' => '+2222222222',
                 'is_internal' => true,
-                'roles' => ['admin'],
+                'roles' => [$adminRoleUuid],
                 'accounts' => [],
             ],
         ],
@@ -118,14 +120,14 @@ test('it can update existing users via api', function () {
     expect($user->is_internal)->toBeTrue();
 
     // Verify sync job was dispatched
-    Bus::assertDispatched(SyncUserWithApplications::class);
+    Bus::assertNotDispatched(SyncUserWithApplications::class);
 });
 
 test('it can soft delete users via api', function () {
     Bus::fake();
     Queue::fake();
 
-    $user = User::factory()->create([
+    $user = User::factory()->createOneQuietly([
         'name' => 'To Be Deleted',
         'email' => 'delete@example.com',
     ]);
@@ -133,8 +135,10 @@ test('it can soft delete users via api', function () {
     $deleteData = [
         'users' => [
             [
+                'uuid' => $user->uuid,
                 'email' => 'delete@example.com',
                 'name' => 'To Be Deleted',
+                'is_internal' => false,
                 'deleted_at' => now()->toISOString(),
                 'roles' => [],
                 'accounts' => [],
@@ -152,24 +156,26 @@ test('it can soft delete users via api', function () {
     ]);
 
     // Verify sync job was dispatched
-    Bus::assertDispatched(SyncUserWithApplications::class);
+    Bus::assertNotDispatched(SyncUserWithApplications::class);
 });
 
 test('it can restore soft deleted users via api', function () {
     Bus::fake();
     Queue::fake();
 
-    $user = User::factory()->create([
+    $user = User::factory()->createOneQuietly([
         'name' => 'Restored User',
         'email' => 'restore@example.com',
     ]);
-    $user->delete(); // Soft delete
+    $user->deleteQuietly(); // Soft delete
 
     $restoreData = [
         'users' => [
             [
+                'uuid' => $user->uuid,
                 'email' => 'restore@example.com',
                 'name' => 'Restored User',
+                'is_internal' => false,
                 'deleted_at' => null,
                 'roles' => [],
                 'accounts' => [],
@@ -188,15 +194,39 @@ test('it can restore soft deleted users via api', function () {
     ]);
 
     // Verify sync job was dispatched
-    Bus::assertDispatched(SyncUserWithApplications::class);
+    Bus::assertNotDispatched(SyncUserWithApplications::class);
 });
 
 test('it syncs user roles correctly', function () {
     Bus::fake();
 
-    // Create roles
-    $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'api', 'app' => 'protego']);
-    $userRole = Role::create(['name' => 'user', 'guard_name' => 'api', 'app' => 'protego']);
+    $adminRoleUuid = Str::uuid();
+    $userRoleUuid = Str::uuid();
+
+    $this->postJson('/api/roles', [
+        'roles' => [
+            [
+                'uuid' => $adminRoleUuid,
+                'name' => 'admin',
+                'guard_name' => 'api',
+                'app' => 'protego',
+                'is_internal' => true,
+                'permissions' => [
+                    ['uuid' => Str::uuid(), 'name' => 'accounts.manage', 'guard_name' => 'api'],
+                ],
+            ],
+            [
+                'uuid' => $userRoleUuid,
+                'name' => 'user',
+                'guard_name' => 'api',
+                'app' => 'protego',
+                'is_internal' => false,
+                'permissions' => [
+                    ['uuid' => Str::uuid(), 'name' => 'support-tickets.view', 'guard_name' => 'api'],
+                ],
+            ],
+        ],
+    ])->assertSuccessful();
 
     $user = User::factory()->create([
         'email' => 'roles@example.com',
@@ -205,9 +235,11 @@ test('it syncs user roles correctly', function () {
     $userData = [
         'users' => [
             [
+                'uuid' => null,
                 'email' => 'roles@example.com',
                 'name' => 'Role User',
-                'roles' => ['admin', 'user'],
+                'is_internal' => true,
+                'roles' => [$adminRoleUuid, $userRoleUuid],
                 'accounts' => [],
             ],
         ],
@@ -236,8 +268,10 @@ test('it syncs user accounts correctly', function () {
     $userData = [
         'users' => [
             [
+                'uuid' => null,
                 'email' => 'accounts@example.com',
                 'name' => 'Account User',
+                'is_internal' => false,
                 'roles' => [],
                 'accounts' => [$account1->uuid, $account2->uuid],
             ],
@@ -261,6 +295,7 @@ test('it handles users without email using name and mobile', function () {
     $userData = [
         'users' => [
             [
+                'uuid' => null,
                 'name' => 'No Email User',
                 'mobile' => '+9999999999',
                 'is_internal' => false,
@@ -325,13 +360,17 @@ test('it handles multiple users in single request', function () {
     $userData = [
         'users' => [
             [
+                'uuid' => null,
                 'name' => 'User One',
+                'is_internal' => false,
                 'email' => 'user1@example.com',
                 'roles' => [],
                 'accounts' => [],
             ],
             [
+                'uuid' => null,
                 'name' => 'User Two',
+                'is_internal' => false,
                 'email' => 'user2@example.com',
                 'roles' => [],
                 'accounts' => [],
@@ -348,8 +387,8 @@ test('it handles multiple users in single request', function () {
     $this->assertDatabaseHas('users', ['email' => 'user1@example.com']);
     $this->assertDatabaseHas('users', ['email' => 'user2@example.com']);
 
-    // Verify sync jobs were dispatched for both users (2 users × 1 updates each = 2 jobs)
-    Bus::assertDispatchedTimes(SyncUserWithApplications::class, 2);
+    // Verify sync jobs were not dispatched
+    Bus::assertNotDispatched(SyncUserWithApplications::class);
 });
 
 test('it handles empty users array', function () {
@@ -378,5 +417,6 @@ test('it handles missing required fields gracefully', function () {
     $response = $this->postJson('/api/users', $userData);
 
     // Should fail because name is required in the database
-    $response->assertStatus(500);
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['users.0.name']);
 });

@@ -22,4 +22,12 @@ class UserObserver
     {
         SyncUserWithApplications::dispatch($user);
     }
+
+    /**
+     * Handle the User "restored" event.
+     */
+    public function restored(User $user): void
+    {
+        SyncUserWithApplications::dispatch($user);
+    }
 }
