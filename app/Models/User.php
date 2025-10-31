@@ -11,13 +11,11 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\HasApiTokens;
 use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
 use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
@@ -128,7 +126,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
      */
     public function sendOneTimePasswordViaSms(): self
     {
-        if (!$this->mobile) {
+        if (! $this->mobile) {
             throw new \Exception('User does not have a mobile number');
         }
 
@@ -151,6 +149,6 @@ class User extends Authenticatable implements FilamentUser, HasName, HasPasskeys
      */
     public function hasPassword(): bool
     {
-        return !is_null($this->password) && !empty($this->password);
+        return ! is_null($this->password) && ! empty($this->password);
     }
 }

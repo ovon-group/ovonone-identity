@@ -12,10 +12,10 @@ class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
 
-//    public function getTitle(): string|Htmlable
-//    {
-//        return Auth::user()->isViewingAllRecords() ? 'Admin Users' : 'Users';
-//    }
+    //    public function getTitle(): string|Htmlable
+    //    {
+    //        return Auth::user()->isViewingAllRecords() ? 'Admin Users' : 'Users';
+    //    }
 
     protected function getHeaderActions(): array
     {

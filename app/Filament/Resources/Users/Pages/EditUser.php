@@ -2,14 +2,12 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
-use App\Filament\Resources\Users\RelationManagers\AccountsRelationManager;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use STS\FilamentImpersonate\Actions\Impersonate;
 
@@ -19,7 +17,7 @@ class EditUser extends EditRecord
 
     public function getTitle(): string
     {
-        return 'Edit ' . $this->getRecord()->getFilamentName();
+        return 'Edit '.$this->getRecord()->getFilamentName();
     }
 
     protected function getHeaderActions(): array
