@@ -5,7 +5,6 @@ use App\Jobs\SyncAccountWithApplications;
 use App\Jobs\SyncUserWithApplications;
 use App\Models\Account;
 use App\Models\User;
-use App\Services\ApplicationService\ApplicationApiService;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Laravel\Passport\Client;
@@ -60,11 +59,9 @@ test('it only syncs users to correct applications', function () {
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
         return $job->user->id === $user->id
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Protego)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Protego)
             )
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Wheel2Web)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Wheel2Web)
             );
     });
 });
@@ -112,11 +109,9 @@ test('internal users are synced to all applications', function () {
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
         return $job->user->id === $user->id
             && $job->user->is_internal === true
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Protego)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Protego)
             )
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Wheel2Web)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Wheel2Web)
             );
     });
 });

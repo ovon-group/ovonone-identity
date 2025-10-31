@@ -17,6 +17,7 @@ class Account extends Model
 {
     /** @use HasFactory<\Database\Factories\AccountFactory> */
     use HasFactory;
+
     use HasUuids;
     use SoftDeletes;
 

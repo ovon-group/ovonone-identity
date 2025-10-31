@@ -29,7 +29,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
 
         $mappedAccounts = Model::withoutEvents(fn () => collect($validData['accounts'])
             ->map(function ($accountData) use ($application) {
-                if (!$accountData['uuid']) {
+                if (! $accountData['uuid']) {
                     unset($accountData['uuid']);
                 }
 
@@ -76,7 +76,7 @@ Route::middleware(EnsureClientIsResourceOwner::class)->group(function () {
         ]);
 
         $users = Model::withoutEvents(fn () => collect($validData['users'])->map(function ($userData) {
-            if (!$userData['uuid']) {
+            if (! $userData['uuid']) {
                 unset($userData['uuid']);
             }
 

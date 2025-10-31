@@ -35,8 +35,7 @@ test('it dispatches sync job when user is created', function () {
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
         return $job->user->id === $user->id
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Protego)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Protego)
             );
     });
 });
@@ -59,8 +58,7 @@ test('it dispatches sync job when user is updated', function () {
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
         return $job->user->id === $user->id
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Protego)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Protego)
             );
     });
 });
@@ -80,8 +78,7 @@ test('it dispatches sync job when user is soft deleted', function () {
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
         return $job->user->id === $user->id
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Protego)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Protego)
             );
     });
 });
@@ -101,8 +98,7 @@ test('it dispatches sync job when user is restored', function () {
     // Verify sync job was dispatched
     Bus::assertDispatched(SyncUserWithApplications::class, function ($job) use ($user) {
         return $job->user->id === $user->id
-            && $job->user->accounts->contains(fn ($account) =>
-                $account->applications->contains(ApplicationEnum::Protego)
+            && $job->user->accounts->contains(fn ($account) => $account->applications->contains(ApplicationEnum::Protego)
             )
             && $job->user->deleted_at === null;
     });
@@ -197,4 +193,3 @@ test('it dispatches multiple sync jobs for multiple users', function () {
     // Verify sync jobs were dispatched for all users
     Bus::assertDispatchedTimes(SyncUserWithApplications::class, 3);
 });
-

@@ -3,12 +3,11 @@
 use App\Enums\ApplicationEnum;
 use App\Jobs\SyncAccountWithApplications;
 use App\Models\Account;
-use App\Models\User;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Laravel\Passport\Client;
 use Laravel\Passport\Passport;
-use Illuminate\Support\Str;
 
 beforeEach(function () {
     // Create OAuth client for API authentication
@@ -30,7 +29,6 @@ beforeEach(function () {
         Passport::actingAsClient($this->client);
     }
 });
-
 
 test('it can create new accounts via api', function () {
     Bus::fake();

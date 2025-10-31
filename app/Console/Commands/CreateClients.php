@@ -33,6 +33,7 @@ class CreateClients extends Command
 
             if ($existingClient && ! $this->option('force')) {
                 $this->components->warn("Existing client found for {$application->getLabel()}, no action taken.");
+
                 continue;
             }
 
