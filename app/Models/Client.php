@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\ApplicationEnum;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Laravel\Passport\Client as PassportClient;
 
 class Client extends PassportClient
@@ -16,7 +15,7 @@ class Client extends PassportClient
      */
     public function skipsAuthorization(Authenticatable $user, array $scopes): bool
     {
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return false;
         }
 

@@ -49,9 +49,9 @@ class OneTimePasswordNotification extends BaseOneTimePasswordNotification
             ->greeting('Hello!')
             ->line('You are receiving this email because we received a login request for your account.')
             ->line("Your one-time password is: **{$this->oneTimePassword->password}**")
-            ->line("This password will expire in 2 minutes.")
+            ->line('This password will expire in 2 minutes.')
             ->line('If you did not request this login, no further action is required.')
-            ->salutation('Regards, ' . config('app.name'));
+            ->salutation('Regards, '.config('app.name'));
     }
 
     /**
@@ -60,7 +60,7 @@ class OneTimePasswordNotification extends BaseOneTimePasswordNotification
     public function toTwilio(object $notifiable): TwilioSmsMessage
     {
         return TwilioSmsMessage::create()
-            ->content("Your " . config('app.name') . " one-time password is: {$this->oneTimePassword->password}. This code will expire in 2 minutes.");
+            ->content('Your '.config('app.name')." one-time password is: {$this->oneTimePassword->password}. This code will expire in 2 minutes.");
     }
 
     /**

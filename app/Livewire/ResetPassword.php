@@ -2,18 +2,22 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Component;
 
 class ResetPassword extends Component
 {
     public $email = '';
+
     public $password = '';
+
     public $password_confirmation = '';
+
     public $token = '';
+
     public $passwordReset = false;
 
     protected $rules = [
@@ -32,7 +36,7 @@ class ResetPassword extends Component
     public function mount($token = null)
     {
         $this->token = $token;
-        
+
         // Get email from request if available
         if (request()->has('email')) {
             $this->email = request()->get('email');
@@ -52,7 +56,7 @@ class ResetPassword extends Component
             ],
             function ($user, $password) {
                 $user->forceFill([
-                    'password' => Hash::make($password)
+                    'password' => Hash::make($password),
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();

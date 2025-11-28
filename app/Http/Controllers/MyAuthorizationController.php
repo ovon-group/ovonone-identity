@@ -11,13 +11,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class MyAuthorizationController extends AuthorizationController
 {
-//    public function authorize(
-//        ServerRequestInterface $psrRequest,
-//        Request $request,
-//        ResponseInterface $psrResponse,
-//        AuthorizationViewResponse $viewResponse
-//    ): Response|AuthorizationViewResponse
-//    {
-//        dd($request, $this);
-//    }
+    //    public function authorize(
+    //        ServerRequestInterface $psrRequest,
+    //        Request $request,
+    //        ResponseInterface $psrResponse,
+    //        AuthorizationViewResponse $viewResponse
+    //    ): Response|AuthorizationViewResponse
+    //    {
+    //        dd($request, $this);
+    //    }
 }

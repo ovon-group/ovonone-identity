@@ -3,11 +3,9 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
-use App\Models\SalesPerson;
 use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Auth;
 
 class CreateUser extends CreateRecord
 {

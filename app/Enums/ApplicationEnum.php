@@ -3,12 +3,12 @@
 namespace App\Enums;
 
 use App\Models\Client;
-use Filament\Support\Contracts\HasLabel;
-use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Contracts\Support\Htmlable;
 
-enum ApplicationEnum: string implements HasLabel, HasIcon, HasColor
+enum ApplicationEnum: string implements HasColor, HasIcon, HasLabel
 {
     case Protego = 'protego';
     case Wheel2Web = 'wheel2web';

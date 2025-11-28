@@ -119,8 +119,7 @@ class UserResource extends Resource
                 TextColumn::make('roles')
                     ->listWithLineBreaks()
                     ->badge()
-                    ->getStateUsing(fn (User $record) => $record->roles->map->getFilamentName())
-                    ->searchable(),
+                    ->getStateUsing(fn (User $record) => $record->roles->map->getFilamentName()),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

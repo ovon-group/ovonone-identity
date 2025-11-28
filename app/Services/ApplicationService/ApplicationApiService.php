@@ -12,9 +12,7 @@ class ApplicationApiService
 {
     protected ?ApplicationEnum $application = null;
 
-    public function __construct(protected WebhookSignatureGenerator $webhookHasher)
-    {
-    }
+    public function __construct(protected WebhookSignatureGenerator $webhookHasher) {}
 
     public function for(ApplicationEnum $application)
     {
