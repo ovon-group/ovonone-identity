@@ -18,6 +18,8 @@
         "spatie/laravel-passkeys": "^1.0",
         "spatie/laravel-permission": "^6.21",
         "stechstudio/filament-impersonate": "^4.0",
+        "symfony/http-client": "^8.1",
+        "symfony/postmark-mailer": "^7.4",
         "ysfkaya/filament-phone-input": "^4.0"
     },
     "require-dev": {
